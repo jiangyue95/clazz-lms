@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jiangyue.mapper.EmpMapper">
+    <!-- 根据 ID 更新员工的基本信息 -->
+    <!-- set 标签：自动生成 set 关键字；会自动删除掉更新字段后多余的 ","  -->
+    <update id="updateById">
+        UPDATE emp
+        <set>
+            <if test="username != null and username != ''">username = #{username},</if>
+            <if test="password != null and password != ''">password = #{password},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="phone != null and phone != ''">phone = #{phone},</if>
+            <if test="job != null">job = #{job},</if>
+            <if test="salary != null">salary = #{salary},</if>
+            <if test="image != null and image != ''">image = #{image},</if>
+            <if test="entryDate != null">entry_date = #{entryDate},</if>
+            <if test="deptId != null">dept_id = #{deptId},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 批量删除员工的基本信息 -->
+    <delete id="deletByIds">
+        delete from emp where id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <select id="list" resultType="com.jiangyue.pojo.Emp">
+        SELECT e.*, d.name AS deptName
+        FROM emp AS e LEFT JOIN dept AS d ON e.dept_id = d.id
+        <where>
+            <if test="name != null and name != ''">
+                e.name LIKE CONCAT ( '%', #{name}, '%' )
+            </if>
+            <if test="gender != null">
+                AND e.gender = #{gender}
+            </if>
+            <if test="begin != null and end != null">
+                AND e.entry_date BETWEEN #{begin} AND #{end}
+            </if>
+        </where>
+        ORDER BY e.update_time DESC
+    </select>
+    <resultMap id="empResultMap" type="com.jiangyue.pojo.Emp">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="password" property="password"/>
+        <result column="name" property="name"/>
+        <result column="gender" property="gender"/>
+        <result column="phone" property="phone"/>
+        <result column="job" property="job" />
+        <result column="salary" property="salary"/>
+        <result column="image" property="image"/>
+        <result column="entry_date" property="entryDate"/>
+        <result column="dept_id" property="deptId"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <!-- 封装员工的工作经历信息 -->
+        <collection property="exprList" ofType="com.jiangyue.pojo.EmpExpr">
+            <id column="ee_id" property="id"/>
+            <id column="ee_empid" property="empId"/>
+            <id column="ee_begin" property="begin"/>
+            <id column="ee_end" property="end"/>
+            <id column="ee_company" property="company"/>
+            <id column="ee_job" property="job"/>
+        </collection>
+    </resultMap>
+    <!--根据 ID 查询员工基本信息和员工的工作经历信息-->
+    <select id="getById" resultMap="empResultMap">
+        SELECT
+        e.*,
+        ee.id AS ee_id,
+        ee.emp_id AS ee_empid,
+        ee.begin AS ee_begin,
+        ee.end AS ee_end,
+        ee.company AS ee_company,
+        ee.job AS ee_job
+        from emp AS e left join emp_expr AS ee
+        on e.id = ee.emp_id
+        WHERE e.id = #{id}
+    </select>
+    <select id="countEmpJobData" resultType="java.util.Map">
+        SELECT
+        (CASE job WHEN 1 THEN '班主任'
+        WHEN 2 THEN '讲师'
+        WHEN 3 THEN '学工主管'
+        WHEN 4 THEN '教研主管'
+        WHEN 5 THEN '咨询师'
+        ELSE '其他' END) AS pos,
+        COUNT(*) AS num
+        from emp
+        GROUP BY job
+        ORDER BY num;
+    </select>
+    <!-- 统计员工性别人数 -->
+    <select id="countEmpGenderData" resultType="java.util.Map">
+        SELECT
+        IF(gender = 1, '男性员工', '女性员工') AS name,
+        count(*) AS value
+        FROM emp
+        GROUP BY gender;
+    </select>
+
+    <select id="queryAll" resultType="com.jiangyue.pojo.Emp">
+        SELECT
+            id,
+            username,
+            password,
+            name,
+            entry_date,
+            gender,
+            image,
+            job,
+            salary,
+            dept_id,
+            create_time,
+            update_time
+        FROM emp
+    </select>
+</mapper>
