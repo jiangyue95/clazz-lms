@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.9</version>
+
+        <!-- 父工程的 pom.xml 的相对路径 -->
+        <relativePath/><!-- lookup parent from repository -->
+    </parent>
+
+    <modules>
+        <module>../clazz-lms-pojo</module>
+        <module>../clazz-lms-utils</module>
+        <module>../clazz-lms</module>
+    </modules>
+
+    <groupId>com.jiangyue</groupId>
+    <artifactId>clazz-lms-parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <!-- 设置打包方式为 pom -->
+    <packaging>pom</packaging>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Custom attributes -->
+        <lombok.version>1.18.42</lombok.version>
+        <spring.boot.version>3.5.9</spring.boot.version>
+        <aliyun.oss.version>3.17.4</aliyun.oss.version>
+    </properties>
+
+    <!-- Directly manage dependencies -->
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+            <version>${spring.boot.version}</version>
+        </dependency>
+    </dependencies>
+
+    <!-- Unified management of dependency versions -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- 阿里云 OSS -->
+            <dependency>
+                <groupId>com.aliyun.oss</groupId>
+                <artifactId>aliyun-sdk-oss</artifactId>
+                <version>${aliyun.oss.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.ini4j</groupId>
+                        <artifactId>ini4j</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>
