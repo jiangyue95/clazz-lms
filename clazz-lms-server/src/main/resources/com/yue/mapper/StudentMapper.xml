@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yue.mapper.StudentMapper">
+    <insert id="insert">
+        INSERT INTO
+        student(
+            name,
+            no,
+            gender,
+            phone,
+            id_card,
+            is_college,
+            address,
+            degree,
+            graduation_date,
+            clazz_id,
+            create_time,
+            update_time
+        )
+        VALUES(
+            #{name},
+            #{no},
+            #{gender},
+            #{phone},
+            #{idCard},
+            #{isCollege},
+            #{address},
+            #{degree},
+            #{graduationDate},
+            #{clazzId},
+            #{createTime},
+            #{updateTime}
+        )
+    </insert>
+    <update id="update">
+        Update student
+        <set>
+            <if test="name != null and no != ''">name = #{name},</if>
+            <if test="no != null and no != ''">no = #{no},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="phone != null and phone != ''">phone = #{phone},</if>
+            <if test="degree != null">degree = #{degree},</if>
+            <if test="idCard != null and idCard != ''">id_card = #{idCard},</if>
+            <if test="isCollege != null">is_college = #{isCollege},</if>
+            <if test="address != null and address != ''">address = #{address},</if>
+            <if test="graduationDate != null">graduation_date = #{graduationDate},</if>
+            <if test="violationCount != null">violation_count = #{violationCount},</if>
+            <if test="violationScore != null">violation_score = #{violationScore},</if>
+            <if test="clazzId != null">clazz_id = #{clazzId},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    <update id="modifyViolationScore">
+        UPDATE student
+        SET violation_score = violation_score + #{score}, violation_count = violation_count + 1
+        WHERE id = #{id}
+    </update>
+    <!-- 学员列表查询 -->
+    <select id="list" resultType="com.yue.pojo.Student">
+        SELECT
+        s.id,
+        s.name,
+        s.no,
+        s.gender,
+        s.phone,
+        s.degree,
+        s.id_card,
+        s.is_college,
+        s.address,
+        s.graduation_date,
+        s.violation_count,
+        s.violation_score,
+        s.clazz_id,
+        c.name AS clazz_name,
+        s.create_time,
+        s.update_time
+        FROM student AS s LEFT JOIN clazz AS c ON s.clazz_id = c.id
+        <where>
+            <if test="name != null and name != ''">
+                s.name LIKE CONCAT ( '%', #{name}, '%' )
+            </if>
+            <if test="degree != null">
+                AND s.degree = #{degree}
+            </if>
+            <if test="clazzId != null">
+                AND s.clazz_id = #{clazzId}
+            </if>
+        </where>
+        ORDER BY s.id
+    </select>
+    <!-- 统计班级学员人数信息 -->
+    <select id="countStudentClazzData" resultType="java.util.Map">
+        SELECT
+        c.name AS clazz_name,
+        COUNT(*) AS num
+        FROM student AS s LEFT JOIN clazz AS c ON s.clazz_id = c.id
+        GROUP BY s.clazz_id
+        ORDER BY num;
+    </select>
+    <select id="countStudentDegreeData" resultType="java.util.Map">
+        SELECT
+        (CASE degree WHEN 1 THEN '初中'
+        WHEN 2 THEN '高中'
+        WHEN 3 THEN '大专'
+        WHEN 4 THEN '本科'
+        WHEN 5 THEN '硕士'
+        WHEN 5 THEN '博士'
+        ELSE '其他' END) AS name,
+        COUNT(*) AS value
+        FROM student
+        GROUP BY degree
+    </select>
+</mapper>

@@ -1,0 +1,33 @@
+package com.yue.controller;
+
+import com.yue.pojo.Emp;
+import com.yue.pojo.LoginInfo;
+import com.yue.pojo.Result;
+import com.yue.service.EmpService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@Slf4j
+@RestController
+@RequestMapping("/login")
+public class LoginController {
+
+    @Autowired
+    private EmpService empService;
+
+    @PostMapping
+    public Result login(@RequestBody Emp emp) {
+        log.info("员工登录: {}", emp);
+
+        LoginInfo loginInfo = empService.login(emp);
+
+        if (loginInfo !=  null) {
+            return Result.success(loginInfo);
+        }
+        return Result.error("用户名或密码错误");
+    }
+}

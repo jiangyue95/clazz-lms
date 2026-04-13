@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yue.mapper.ClazzMapper">
+    <resultMap id="clazzResultMap" type="com.yue.pojo.Clazz">
+        <id property="id" column="id"/>
+        <id property="name" column="name"/>
+        <id property="room" column="room"/>
+        <id property="beginDate" column="begin_date"/>
+        <id property="endDate" column="end_date"/>
+        <id property="masterId" column="master_id"/>
+        <id property="subject" column="subject"/>
+        <id property="masterName" column="master_name"/>
+        <id property="createTime" column="create_time"/>
+        <id property="updateTime" column="update_time"/>
+    </resultMap>
+    <update id="modifyClazz">
+        UPDATE clazz
+        <set>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="room != null">room = #{room},</if>
+            <if test="beginDate != null">begin_date = #{beginDate},</if>
+            <if test="endDate != null">end_date = #{endDate},</if>
+            <if test="masterId != null">master_id = #{masterId},</if>
+            <if test="subject != null">subject = #{subject},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <select id="list" resultMap="clazzResultMap">
+        SELECT
+        c.id,
+        c.name,
+        c.room,
+        c.begin_date,
+        c.end_date,
+        c.master_id,
+        c.subject,
+        e.name AS master_name,
+        c.create_time,
+        c.update_time
+        FROM clazz AS c LEFT JOIN emp AS e on c.master_id = e.id
+        <where>
+            <if test="name != null and name != ''">
+                c.name LIKE CONCAT ( '%', #{name}, '%' )
+            </if>
+            <if test="begin != null and end != null">
+                AND c.end_date BETWEEN #{begin} AND #{end}
+            </if>
+        </where>
+    </select>
+</mapper>

@@ -4,6 +4,7 @@
 # Log file
 *.log
 logs/
+**/logs/
 
 # Package Files
 *.jar
@@ -23,18 +24,24 @@ pom.xml.versionsBackup
 *.iml
 out/
 
+# VS Code
+.vscode/
+
 # OS generated
 .DS_Store
 .DS_Store?
 ._*
 
-# Spring Boot - 关键配置（最重要）
+# Spring Boot
 **/src/main/resources/application*.properties
 **/src/main/resources/application*.yml
 !**/src/main/resources/application-example*.properties
 !**/src/main/resources/application-example*.yml
 
-# 其他运行时数据
+# other runtime data
 pids/
 data/
 /src/
+
+# Claude
+.claude/

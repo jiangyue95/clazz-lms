@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- console output -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <!-- formated output:
+                 %d: date,
+                 %thread: thread name,
+                 %-5level: level from left, 5 characters width,
+                 %logger{50}: longest 50 characters,
+                 %msg: log message,
+                 %n: new line -->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- system file output -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- the name of log file, %i represents the sequence number -->
+            <FileNamePattern>logs/clazz-lms-%d{yyyy-MM-dd}-%i.log</FileNamePattern>
+            <!-- the max number of history log files -->
+            <MaxHistory>30</MaxHistory>
+            <!-- the max size of log file, exceed the limit will trigger rolling -->
+            <maxFileSize>10MB</maxFileSize>
+        </rollingPolicy>
+
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <!-- formated output:
+                 %d: date,
+                 %thread: thread name,
+                 %-5level: level from left, 5 characters width,
+                 %logger{50}: longest 50 characters,
+                 %msg: log message,
+                 %n: new line -->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50}-%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- log output level -->
+    <root level="info">
+        <!-- log output position -->
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </root>
+</configuration>

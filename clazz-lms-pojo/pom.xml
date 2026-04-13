@@ -6,13 +6,15 @@
 
     <!-- parent project -->
     <parent>
-        <groupId>com.jiangyue</groupId>
-        <artifactId>clazz-lms-parent</artifactId>
+        <groupId>com.yue</groupId>
+        <artifactId>clazz-lms</artifactId>
         <version>1.0-SNAPSHOT</version>
-        <relativePath>../clazz-lms-parent/pom.xml</relativePath>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>clazz-lms-pojo</artifactId>
+    <name>clazz-lms-pojo</name>
+    <description>LMS POJO Module</description>
 
     <dependencies>
         <dependency>
