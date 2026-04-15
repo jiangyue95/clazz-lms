@@ -37,11 +37,10 @@ public interface EmpMapper {
     void deleteByIds(List<Integer> ids);
 
     /**
-     * 根据 ID 获取员工信息
-     * @param id
-     * @return
+     * Get employee basic information by id
+     * @param id employee id
+     * @return an employee entity
      */
-
     Emp getById(Integer id);
 
     /**

@@ -8,12 +8,22 @@ import java.util.List;
 @Mapper
 public interface EmpExprMapper {
 
-
+    /**
+     * Batch insert employee work experience
+     * @param exprList a list of employee work experience entity
+     */
     void insertBatch(List<EmpExpr> exprList);
 
     /**
-     * 根据员工 ID 批量删除员工工作经历
-     * @param empIds
+     * Batch delete employee work experience
+     * @param empIds a list of employee id
      */
     void deleteByEmpIds(List<Integer> empIds);
+
+    /**
+     * Get employee work experience by employee id
+     * @param empId employee id
+     * @return a list of employee work experience
+     */
+    List<EmpExpr> selectByEmpId(Integer empId);
 }

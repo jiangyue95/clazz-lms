@@ -6,10 +6,12 @@ import com.yue.mapper.EmpExprMapper;
 import com.yue.mapper.EmpMapper;
 import com.yue.pojo.dto.EmpListQueryDTO;
 import com.yue.pojo.dto.EmpLoginDTO;
+import com.yue.pojo.dto.EmpSaveDTO;
 import com.yue.pojo.dto.LoginInfo;
 import com.yue.pojo.entity.Emp;
 import com.yue.pojo.entity.EmpExpr;
 import com.yue.pojo.entity.EmpLog;
+import com.yue.pojo.vo.EmpInfoVO;
 import com.yue.pojo.vo.EmpLoginVO;
 import com.yue.pojo.vo.EmpVO;
 import com.yue.service.EmpLogService;
@@ -42,80 +44,64 @@ public class EmpServiceImpl implements EmpService {
     @Autowired
     private ResourcePatternResolver resourcePatternResolver;
 
-//    @Override
-//    public PageResult<Emp> list(Integer page, Integer pageSize) {
-        // 原始的分页查询操作
-        // 1. 获取总记录数
-//        Long total = empMapper.count();
-        // 2. 获取数据列表
-//        Integer start = (page - 1) * pageSize;
-//        List<Emp> rows = empMapper.list(start, pageSize);
-        // 3. 封装分页结果
-//        return new PageResult<Emp>(total, rows);
-//    }
-
     /**
-     *
-     * @param name
-     * @param gender
-     * @param begin
-     * @param end
-     * @param page     页码
-     * @param pageSize 每页显示的记录数
-     * @return
-     *
-     */
-//    @Override
-//    public PageResult<Emp> page(String name, Integer gender, LocalDate begin, LocalDate end, Integer page, Integer pageSize) {
-//        // 1. 设置分页参数（PageHelper)
-//        PageHelper.startPage(page, pageSize);
-//        // 2. 执行查询
-//        List<Emp> empList = empMapper.list(name, gender, begin, end);
-//        // 3. 解析查询结果，并封装
-//        Page<Emp> p = (Page<Emp>) empList;
-//        return new PageResult<>(p.getTotal(), p.getResult());
-//    }
-
-    /**
-     *
-     * @param empQueryParam
-     * @return
+     * Page query employee list
+     * @param dto employee list query DTO
+     * @return employee list page result
      */
     @Override
     public PageResult<EmpVO> page(EmpListQueryDTO dto) {
-        // 1. 设置分页参数（PageHelper)
+        // 1. set pagination parameters: page number and page size
         PageHelper.startPage(dto.getPage(), dto.getPageSize());
-        // 2. 执行查询
+
+        // 2. execute query to get employee list
         List<EmpVO> empList = empMapper.empList(dto);
-        // 3. 解析查询结果，并封装
+
+        // 3. wrap the query result in a PageResult object
         Page<EmpVO> p = (Page<EmpVO>) empList;
         return new PageResult<>(p.getTotal(), p.getResult());
     }
 
+    /**
+     * Save new employee
+     * @param empSaveDTO employee save DTO contains employee information and its experience list
+     * @throws Exception
+     */
     @Transactional(rollbackFor = {Exception.class})
     @Override
-    public void save(Emp emp) throws Exception {
+    public void save(EmpSaveDTO empSaveDTO) throws Exception {
         try {
-            // 1. 保存员工基本信息
-            emp.setCreateTime(LocalDateTime.now());
-            emp.setUpdateTime(LocalDateTime.now());
+            // 1.Save employee information
+            Emp emp = Emp.builder()
+                    .username(empSaveDTO.getUsername())
+                    .name(empSaveDTO.getName())
+                    .gender(empSaveDTO.getGender())
+                    .job(empSaveDTO.getJob())
+                    .entryDate(empSaveDTO.getEntryDate())
+                    .deptId(empSaveDTO.getDeptId())
+                    .phone(empSaveDTO.getPhone())
+                    .salary(empSaveDTO.getSalary())
+                    .image(empSaveDTO.getImage())
+                    .createTime(LocalDateTime.now())
+                    .updateTime(LocalDateTime.now())
+                    .password("123456")
+                    .build();
             empMapper.insert(emp);
 
-            // 人工增加异常
-//            int i = 1/0;
-
-            // 2. 保存员工的工作经历
-//            List<EmpExpr> exprList = emp.getExprList();
-//            if (!CollectionUtils.isEmpty(exprList)) {
-//                // 遍历集合，为 empId 赋值
-//                exprList.forEach(empExpr -> {
-//                    empExpr.setEmpId(emp.getId());
-//                });
-//                empExprMapper.insertBatch(exprList);
-//            }
+            // 2. save employee work experience
+            List<EmpExpr> exprList = empSaveDTO.getExprList();
+            if  (!CollectionUtils.isEmpty(exprList)) {
+                exprList.forEach(empExpr -> {
+                    empExpr.setEmpId(emp.getId());
+                });
+                empExprMapper.insertBatch(exprList);
+            }
         }finally {
-            // 3. 记录操作日志
-            EmpLog empLog = new EmpLog(null, LocalDateTime.now(), "新增员工：" + emp.toString());
+            // 3. record operation log in database
+            EmpLog empLog = EmpLog.builder()
+                    .operateTime(LocalDateTime.now())
+                    .info("Add new employee：" + empSaveDTO.toString())
+                    .build();
             empLogService.insert(empLog);
         }
     }
@@ -134,9 +120,35 @@ public class EmpServiceImpl implements EmpService {
         empExprMapper.deleteByEmpIds(ids);
     }
 
+    /**
+     * Get employee information by id
+     *
+     * @param id employee id
+     * @return an employee information VO
+     */
     @Override
-    public Emp getInfo(Integer id) {
-        return empMapper.getById(id);
+    public EmpInfoVO getInfo(Integer id) {
+        Emp emp = empMapper.getById(id);
+        if (emp == null) {
+            return null;
+        }
+        List<EmpExpr> exprList = empExprMapper.selectByEmpId(id);
+
+        EmpInfoVO empInfoVO = EmpInfoVO.builder()
+                .id(emp.getId())
+                .username(emp.getUsername())
+                .name(emp.getName())
+                .gender(emp.getGender())
+                .image(emp.getImage())
+                .deptId(emp.getDeptId())
+                .entryDate(emp.getEntryDate())
+                .job(emp.getJob())
+                .salary(emp.getSalary())
+                .exprList(exprList)
+                .createTime(emp.getCreateTime())
+                .updateTime(emp.getUpdateTime())
+                .build();
+        return empInfoVO;
     }
 
     @Transactional(rollbackFor = Exception.class)

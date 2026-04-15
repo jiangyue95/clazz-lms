@@ -3,16 +3,27 @@
         PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.yue.mapper.EmpExprMapper">
+    <!-- batch insert employee work experience -->
+    <!-- @param exprList a list of employee work experience entity -->
     <insert id="insertBatch">
         insert into emp_expr (emp_id, begin, end, company, job) values
         <foreach collection="exprList" item="expr" separator=",">
             (#{expr.empId}, #{expr.begin}, #{expr.end}, #{expr.company}, #{expr.job})
         </foreach>
     </insert>
-    <delete id="delteByEmpIds">
+
+    <!-- delete employee work experience by employee id -->
+    <!-- @param empIds a list of employee id -->
+    <delete id="deleteByEmpIds">
         delete from emp_expr where emp_id in
         <foreach collection="empIds" item="empId" separator="," open="(" close=")">
             #{empId}
         </foreach>
     </delete>
+
+    <!-- select employee work experience by employee id -->
+    <!-- @param empId employee id -->
+    <select id="selectByEmpId" resultType="com.yue.pojo.entity.EmpExpr">
+        select * from emp_expr where emp_id = #{empId}
+    </select>
 </mapper>
