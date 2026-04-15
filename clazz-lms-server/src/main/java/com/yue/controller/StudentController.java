@@ -3,7 +3,7 @@ package com.yue.controller;
 import com.yue.anno.Log;
 import com.yue.pojo.PageResult;
 import com.yue.pojo.Result;
-import com.yue.pojo.Student;
+import com.yue.pojo.entity.Student;
 import com.yue.pojo.StudentQueryParam;
 import com.yue.service.StudentService;
 import lombok.extern.slf4j.Slf4j;

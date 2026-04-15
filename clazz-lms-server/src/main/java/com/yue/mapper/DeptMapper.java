@@ -1,6 +1,6 @@
 package com.yue.mapper;
 
-import com.yue.pojo.Dept;
+import com.yue.pojo.entity.Dept;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;

@@ -1,6 +1,6 @@
 package com.yue.service;
 
-import com.yue.pojo.Clazz;
+import com.yue.pojo.entity.Clazz;
 import com.yue.pojo.ClazzQueryParam;
 import com.yue.pojo.PageResult;
 

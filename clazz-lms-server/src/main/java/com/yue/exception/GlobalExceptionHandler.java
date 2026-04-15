@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  */
 @Slf4j
 @RestControllerAdvice
-public class GloabalExceptionHandler {
+public class GlobalExceptionHandler {
 
     private final ReportService reportService;
 
-    public GloabalExceptionHandler(ReportService reportService) {
+    public GlobalExceptionHandler(ReportService reportService) {
         this.reportService = reportService;
     }
 
@@ -42,8 +42,8 @@ public class GloabalExceptionHandler {
         return Result.error(e.getMessage());
     }
 
-    @ExceptionHandler(DemptHasEmpException.class)
-    public Result handleDemptHasEmpException(DemptHasEmpException e) {
+    @ExceptionHandler(DeptHasEmpException.class)
+    public Result handleDeptHasEmpException(DeptHasEmpException e) {
         log.info("部门还有员工异常", e);
         return Result.error(e.getMessage());
     }

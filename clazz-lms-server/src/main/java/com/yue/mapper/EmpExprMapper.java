@@ -1,6 +1,6 @@
 package com.yue.mapper;
 
-import com.yue.pojo.EmpExpr;
+import com.yue.pojo.entity.EmpExpr;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -15,5 +15,5 @@ public interface EmpExprMapper {
      * 根据员工 ID 批量删除员工工作经历
      * @param empIds
      */
-    void delteByEmpIds(List<Integer> empIds);
+    void deleteByEmpIds(List<Integer> empIds);
 }

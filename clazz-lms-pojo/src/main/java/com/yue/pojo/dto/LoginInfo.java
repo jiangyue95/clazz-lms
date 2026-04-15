@@ -1,12 +1,17 @@
-package com.yue.pojo;
+package com.yue.pojo.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * login info dto(Data Transfer Object)
+ */
+@AllArgsConstructor
+@Builder
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class LoginInfo {
     private Integer id;
     private String username;

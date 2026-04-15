@@ -1,32 +1,45 @@
 package com.yue.pojo;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+/**
+ * Result：generic response class
+ */
+@AllArgsConstructor
+@Builder
 @Data
+@NoArgsConstructor
 public class Result {
+
+    // Response Code: 1, success; 0, fail
     private Integer code;
+    // tips message: success or fail
     private String msg;
+    // data: the data of the response
     private Object data;
 
     public static Result success() {
-        Result result = new Result();
-        result.code = 1;
-        result.msg = "success";
-        return result;
+        return Result.builder()
+                .code(1)
+                .msg("success")
+                .build();
     }
 
     public static Result success(Object object) {
-        Result result = new Result();
-        result.code = 1;
-        result.msg = "success";
-        result.data = object;
-        return result;
+        return Result.builder()
+                .code(1)
+                .msg("success")
+                .data(object)
+                .build();
     }
 
     public static Result error(String msg) {
-        Result result = new Result();
-        result.code = 0;
-        result.msg = msg;
-        return result;
+        return Result.builder()
+                .code(0)
+                .msg(msg)
+                .build();
     }
 }

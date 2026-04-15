@@ -16,9 +16,9 @@ public class JWTUtils {
     private static final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET_STRING));
 
     /**
-     * 生成 JWT 令牌
-     * @param claims JWT 令牌中的数据
-     * @return 生成的J WT 令牌
+     * Generate JWT token
+     * @param claims JWT token data
+     * @return generated JWT token String
      */
     public static String generateJWTToken(Map<String, Object> claims) {
         return Jwts.builder()
@@ -29,9 +29,9 @@ public class JWTUtils {
     }
 
     /**
-     * 解析 JWT 令牌
-     * @param jwtToken JWT 令牌
-     * @return 解析结果：一个 Claims 对象
+     * Parse JWT token
+     * @param jwtToken JWT token
+     * @return parsed Claims object
      */
     public static Claims parseJWTToken(String jwtToken) {
         return Jwts.parser()

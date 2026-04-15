@@ -1,15 +1,20 @@
-package com.yue.pojo;
+package com.yue.pojo.vo;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ *
+ */
+@AllArgsConstructor
+@Builder
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
-public class JobOption {
+public class JobOptionVO {
     private List jobList;
     private List dataList;
 }

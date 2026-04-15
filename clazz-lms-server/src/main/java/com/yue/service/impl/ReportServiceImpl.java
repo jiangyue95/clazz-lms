@@ -2,8 +2,9 @@ package com.yue.service.impl;
 
 import com.yue.mapper.EmpMapper;
 import com.yue.mapper.StudentMapper;
-import com.yue.pojo.ClazzCount;
-import com.yue.pojo.JobOption;
+import com.yue.pojo.vo.ClazzCountVO;
+import com.yue.pojo.vo.JobOptionVO;
+import com.yue.pojo.vo.StudentDegreeVO;
 import com.yue.service.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,17 +22,17 @@ public class ReportServiceImpl implements ReportService {
 
     /**
      * 获取员工职位人数
-     * @return JobOption 职位数据
+     * @return JobOptionVO 职位数据
      */
     @Override
-    public JobOption getEmpJobData() {
+    public JobOptionVO getEmpJobData() {
         // 1. 调用用 Mapper 接口，获取统计数据
         List<Map<String, Object>> list = empMapper.countEmpJobData();
 
         // 2. 组装结果，并返回
         List<Object> jobList = list.stream().map(dataMap -> dataMap.get("pos")).toList();
         List<Object> dataList = list.stream().map(dataMap -> dataMap.get("num")).toList();
-        return new JobOption(jobList, dataList);
+        return JobOptionVO.builder().jobList(jobList).dataList(dataList).build();
     }
 
     /**
@@ -45,18 +46,18 @@ public class ReportServiceImpl implements ReportService {
 
     /**
      * 获取学员班级人数
-     * @return ClazzCount 对象
+     * @return ClazzCountVO 对象
      */
     @Override
-    public ClazzCount getStudentCountData() {
+    public ClazzCountVO getStudentCountData() {
         List<Map<String, Object>> list = studentMapper.countStudentClazzData();
         List<Object> clazzList = list.stream().map(dataMap -> dataMap.get("clazz_name")).toList();
         List<Object> dataList = list.stream().map(dataMap -> dataMap.get("num")).toList();
-        return new ClazzCount(clazzList, dataList);
+        return ClazzCountVO.builder().clazzList(clazzList).dataList(dataList).build();
     }
 
     @Override
-    public List<Map<String, Object>> getStudentDegreeData() {
+    public List<StudentDegreeVO> getStudentDegreeData() {
         return studentMapper.countStudentDegreeData();
     }
 }

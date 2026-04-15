@@ -3,7 +3,7 @@ package com.yue.service.impl;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.yue.mapper.LogMapper;
-import com.yue.pojo.OperateLog;
+import com.yue.pojo.entity.OperateLog;
 import com.yue.pojo.PageResult;
 import com.yue.service.LogService;
 import org.springframework.beans.factory.annotation.Autowired;

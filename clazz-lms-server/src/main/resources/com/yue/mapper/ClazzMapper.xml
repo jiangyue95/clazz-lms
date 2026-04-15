@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.yue.mapper.ClazzMapper">
-    <resultMap id="clazzResultMap" type="com.yue.pojo.Clazz">
+    <resultMap id="clazzResultMap" type="com.yue.pojo.entity.Clazz">
         <id property="id" column="id"/>
         <id property="name" column="name"/>
         <id property="room" column="room"/>

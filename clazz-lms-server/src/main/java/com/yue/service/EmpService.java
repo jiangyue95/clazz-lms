@@ -1,9 +1,13 @@
 package com.yue.service;
 
-import com.yue.pojo.Emp;
+import com.yue.pojo.dto.EmpListQueryDTO;
+import com.yue.pojo.dto.EmpLoginDTO;
+import com.yue.pojo.entity.Emp;
 import com.yue.pojo.EmpQueryParam;
-import com.yue.pojo.LoginInfo;
+import com.yue.pojo.dto.LoginInfo;
 import com.yue.pojo.PageResult;
+import com.yue.pojo.vo.EmpLoginVO;
+import com.yue.pojo.vo.EmpVO;
 
 import java.util.List;
 
@@ -17,7 +21,7 @@ public interface EmpService {
      * @param empQueryParam
      * @return
      */
-    PageResult<Emp> page(EmpQueryParam empQueryParam);
+    PageResult<EmpVO> page(EmpListQueryDTO dto);
 
     /**
      * 保存员工信息
@@ -27,9 +31,8 @@ public interface EmpService {
     void save(Emp emp) throws Exception;
 
     /**
-     * 批量删除员工信息
-     * 
-     * @param ids
+     * Delete employee by a list of id
+     * @param ids a list of employee id
      */
     void delete(List<Integer> ids);
 
@@ -51,9 +54,9 @@ public interface EmpService {
     List<Emp> getAllEmp();
 
     /**
-     * 登录
-     * @param emp 请求体中的员工信息
-     * @return 一个 LoginInfo 对象
+     * Employee login
+     * @param dto
+     * @return
      */
-    LoginInfo login(Emp emp);
+    EmpLoginVO login(EmpLoginDTO dto);
 }

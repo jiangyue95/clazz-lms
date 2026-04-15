@@ -5,7 +5,7 @@ import com.github.pagehelper.PageHelper;
 import com.yue.exception.ClazzHasStudentException;
 import com.yue.mapper.ClazzMapper;
 import com.yue.mapper.StudentMapper;
-import com.yue.pojo.Clazz;
+import com.yue.pojo.entity.Clazz;
 import com.yue.pojo.ClazzQueryParam;
 
 import com.yue.pojo.PageResult;

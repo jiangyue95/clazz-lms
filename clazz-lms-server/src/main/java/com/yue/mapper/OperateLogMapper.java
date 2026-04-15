@@ -1,6 +1,6 @@
 package com.yue.mapper;
 
-import com.yue.pojo.OperateLog;
+import com.yue.pojo.entity.OperateLog;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 

@@ -24,13 +24,13 @@
     </update>
 
     <!-- 批量删除员工的基本信息 -->
-    <delete id="deletByIds">
+    <delete id="deleteByIds">
         delete from emp where id in
         <foreach collection="ids" item="id" separator="," open="(" close=")">
             #{id}
         </foreach>
     </delete>
-    <select id="list" resultType="com.yue.pojo.Emp">
+    <select id="empList" resultType="com.yue.pojo.vo.EmpVO">
         SELECT e.*, d.name AS deptName
         FROM emp AS e LEFT JOIN dept AS d ON e.dept_id = d.id
         <where>
@@ -46,7 +46,7 @@
         </where>
         ORDER BY e.update_time DESC
     </select>
-    <resultMap id="empResultMap" type="com.yue.pojo.Emp">
+    <resultMap id="empResultMap" type="com.yue.pojo.entity.Emp">
         <id column="id" property="id"/>
         <result column="username" property="username"/>
         <result column="password" property="password"/>
@@ -60,8 +60,9 @@
         <result column="dept_id" property="deptId"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
-        <!-- 封装员工的工作经历信息 -->
-        <collection property="exprList" ofType="com.yue.pojo.EmpExpr">
+        <!-- 封装员工的工作经历信息 (temporarily commented out - exprList moved to EmpDetailVO) -->
+        <!--
+        <collection property="exprList" ofType="com.yue.pojo.entity.EmpExpr">
             <id column="ee_id" property="id"/>
             <id column="ee_empid" property="empId"/>
             <id column="ee_begin" property="begin"/>
@@ -69,7 +70,9 @@
             <id column="ee_company" property="company"/>
             <id column="ee_job" property="job"/>
         </collection>
+        -->
     </resultMap>
+
     <!--根据 ID 查询员工基本信息和员工的工作经历信息-->
     <select id="getById" resultMap="empResultMap">
         SELECT
@@ -97,6 +100,7 @@
         GROUP BY job
         ORDER BY num;
     </select>
+
     <!-- 统计员工性别人数 -->
     <select id="countEmpGenderData" resultType="java.util.Map">
         SELECT
@@ -106,7 +110,7 @@
         GROUP BY gender;
     </select>
 
-    <select id="queryAll" resultType="com.yue.pojo.Emp">
+    <select id="queryAll" resultType="com.yue.pojo.entity.Emp">
         SELECT
             id,
             username,
@@ -121,5 +125,11 @@
             create_time,
             update_time
         FROM emp
+    </select>
+
+    <select id="getByUsername" resultType="com.yue.pojo.entity.Emp">
+        SELECT id, username, password, name
+        FROM emp
+        WHERE username = #{username}
     </select>
 </mapper>

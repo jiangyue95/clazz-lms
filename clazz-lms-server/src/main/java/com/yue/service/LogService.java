@@ -1,6 +1,6 @@
 package com.yue.service;
 
-import com.yue.pojo.OperateLog;
+import com.yue.pojo.entity.OperateLog;
 import com.yue.pojo.PageResult;
 
 public interface LogService {

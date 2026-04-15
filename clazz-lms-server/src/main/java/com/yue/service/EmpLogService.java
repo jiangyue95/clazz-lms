@@ -1,6 +1,6 @@
 package com.yue.service;
 
-import com.yue.pojo.EmpLog;
+import com.yue.pojo.entity.EmpLog;
 
 public interface EmpLogService {
 

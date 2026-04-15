@@ -1,6 +1,6 @@
 package com.yue.mapper;
 
-import com.yue.pojo.EmpLog;
+import com.yue.pojo.entity.EmpLog;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 

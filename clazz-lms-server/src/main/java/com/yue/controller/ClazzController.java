@@ -1,7 +1,7 @@
 package com.yue.controller;
 
 import com.yue.anno.Log;
-import com.yue.pojo.Clazz;
+import com.yue.pojo.entity.Clazz;
 import com.yue.pojo.ClazzQueryParam;
 import com.yue.pojo.PageResult;
 import com.yue.pojo.Result;

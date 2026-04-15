@@ -3,7 +3,7 @@ package com.yue.aop;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yue.mapper.OperateLogMapper;
-import com.yue.pojo.OperateLog;
+import com.yue.pojo.entity.OperateLog;
 import com.yue.utils.BaseContext;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;

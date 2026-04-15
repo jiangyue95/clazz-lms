@@ -1,6 +1,6 @@
 package com.yue.controller;
 
-import com.yue.pojo.OperateLog;
+import com.yue.pojo.entity.OperateLog;
 import com.yue.pojo.PageResult;
 import com.yue.pojo.Result;
 import com.yue.service.LogService;

@@ -1,7 +1,7 @@
 package com.yue.service.impl;
 
 import com.yue.mapper.EmpLogMapper;
-import com.yue.pojo.EmpLog;
+import com.yue.pojo.entity.EmpLog;
 import com.yue.service.EmpLogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

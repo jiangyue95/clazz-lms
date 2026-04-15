@@ -1,6 +1,8 @@
 package com.yue.interceptor;
 
+import com.yue.utils.BaseContext;
 import com.yue.utils.JWTUtils;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -16,36 +18,36 @@ import org.springframework.web.servlet.HandlerInterceptor;
 public class TokenInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        // 1. 获取到请求的路径
-        String path = request.getRequestURI();
-
-        // 2. 判断是否是登录请求，如果请求路径中包含/login，说明是登录操作，放行
-        if (path.contains("/login")) {
-            log.info("登录操作，放行");
-            return true;
-        }
-
-        // 3. 获取请求头中的 token（JWT Token）
+        // 1. get the JWT Token in the request header
         String token = request.getHeader("token");
 
-        // 4. 判断 token 是否为空，如果为空，说明没有登录，返回错误信息（响应 401 状态码）
+        // 2. If the token is empty, it means the user has not logged in,
+        // return an error message (response 401 status code)
         if (token == null || token.isEmpty()) {
-            log.info("令牌为空，响应401");
+            log.info("Token is empty, response 401");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return  false;
         }
 
-        // 5. 如果 token 不为空，则调用 JWTUtils 类中的 parseJWTToken 方法，解析 token。校验失败，返回错误信息（响应 401 状态码）
+        // 3. if the token is not empty, call the parseJWTToken method in the JWTUtils class to parse the token.
+        // if the token is invalid, return an error message (response 401 status code)
         try {
-            JWTUtils.parseJWTToken(token);
+            Claims claims =JWTUtils.parseJWTToken(token);
+            BaseContext.setCurrentId((Integer) claims.get("id"));
+            log.info("Current user empId: {}", BaseContext.getCurrentId());
         } catch (Exception e) {
-            log.info("令牌非法，响应401");
+            log.info("Token invalid，response 401");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return false;
         }
 
-        // 6. 校验通过，则放行
-        log.info("令牌合法，放行");
+        // 4. if token is valid, return true to allow the request to continue processing
+        log.info("Token valid, continue processing");
         return true;
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+        BaseContext.remove();
     }
 }

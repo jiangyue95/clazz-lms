@@ -4,12 +4,21 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.yue.mapper.EmpExprMapper;
 import com.yue.mapper.EmpMapper;
+import com.yue.pojo.dto.EmpListQueryDTO;
+import com.yue.pojo.dto.EmpLoginDTO;
+import com.yue.pojo.dto.LoginInfo;
+import com.yue.pojo.entity.Emp;
+import com.yue.pojo.entity.EmpExpr;
+import com.yue.pojo.entity.EmpLog;
+import com.yue.pojo.vo.EmpLoginVO;
+import com.yue.pojo.vo.EmpVO;
 import com.yue.service.EmpLogService;
 import com.yue.service.EmpService;
 import com.yue.utils.JWTUtils;
 import com.yue.pojo.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -30,6 +39,8 @@ public class EmpServiceImpl implements EmpService {
     private EmpExprMapper empExprMapper;
     @Autowired
     private EmpLogService empLogService;
+    @Autowired
+    private ResourcePatternResolver resourcePatternResolver;
 
 //    @Override
 //    public PageResult<Emp> list(Integer page, Integer pageSize) {
@@ -71,13 +82,13 @@ public class EmpServiceImpl implements EmpService {
      * @return
      */
     @Override
-    public PageResult<Emp> page(EmpQueryParam empQueryParam) {
+    public PageResult<EmpVO> page(EmpListQueryDTO dto) {
         // 1. 设置分页参数（PageHelper)
-        PageHelper.startPage(empQueryParam.getPage(), empQueryParam.getPageSize());
+        PageHelper.startPage(dto.getPage(), dto.getPageSize());
         // 2. 执行查询
-        List<Emp> empList = empMapper.list(empQueryParam);
+        List<EmpVO> empList = empMapper.empList(dto);
         // 3. 解析查询结果，并封装
-        Page<Emp> p = (Page<Emp>) empList;
+        Page<EmpVO> p = (Page<EmpVO>) empList;
         return new PageResult<>(p.getTotal(), p.getResult());
     }
 
@@ -94,14 +105,14 @@ public class EmpServiceImpl implements EmpService {
 //            int i = 1/0;
 
             // 2. 保存员工的工作经历
-            List<EmpExpr> exprList = emp.getExprList();
-            if (!CollectionUtils.isEmpty(exprList)) {
-                // 遍历集合，为 empId 赋值
-                exprList.forEach(empExpr -> {
-                    empExpr.setEmpId(emp.getId());
-                });
-                empExprMapper.insertBatch(exprList);
-            }
+//            List<EmpExpr> exprList = emp.getExprList();
+//            if (!CollectionUtils.isEmpty(exprList)) {
+//                // 遍历集合，为 empId 赋值
+//                exprList.forEach(empExpr -> {
+//                    empExpr.setEmpId(emp.getId());
+//                });
+//                empExprMapper.insertBatch(exprList);
+//            }
         }finally {
             // 3. 记录操作日志
             EmpLog empLog = new EmpLog(null, LocalDateTime.now(), "新增员工：" + emp.toString());
@@ -109,14 +120,18 @@ public class EmpServiceImpl implements EmpService {
         }
     }
 
+    /**
+     * Delete employee by a list of id
+     * @param ids a list of employee id
+     */
     @Transactional(rollbackFor = {Exception.class})
     @Override
     public void delete(List<Integer> ids) {
-        // 1. 批量删除员工基本信息
-        empMapper.deletByIds(ids);
+        // 1. Batch delete employee basic information
+        empMapper.deleteByIds(ids);
 
-        // 2. 批量删除员工的工作经历信息
-        empExprMapper.delteByEmpIds(ids);
+        // 2. Batch delete employee work experience
+        empExprMapper.deleteByEmpIds(ids);
     }
 
     @Override
@@ -133,15 +148,15 @@ public class EmpServiceImpl implements EmpService {
 
         // 2. 根据 ID 修改员工的工作经历
         // 2.1 先根据员工 ID 删除原有的工作经历
-        empExprMapper.delteByEmpIds(Arrays.asList(emp.getId()));
+        empExprMapper.deleteByEmpIds(Arrays.asList(emp.getId()));
 
         // 2.2 再添加这个员工新的工作经历
-        List<EmpExpr> exprList = emp.getExprList();
-        if(!CollectionUtils.isEmpty(exprList)){
-            // 为 expr 的 emp_id 赋值
-            exprList.forEach(empExpr -> empExpr.setEmpId(emp.getId()));
-            empExprMapper.insertBatch(exprList);
-        }
+//        List<EmpExpr> exprList = emp.getExprList();
+//        if(!CollectionUtils.isEmpty(exprList)){
+//            // 为 expr 的 emp_id 赋值
+//            exprList.forEach(empExpr -> empExpr.setEmpId(emp.getId()));
+//            empExprMapper.insertBatch(exprList);
+//        }
     }
 
     /**
@@ -155,24 +170,32 @@ public class EmpServiceImpl implements EmpService {
     }
 
     /**
-     * 验证登录信息并生成 token
-     * @param emp 请求体中的员工信息
-     * @return
+     * Login employee by username and password
+     * @param dto login request body
+     * @return employee login vo, or null if login failed
      */
     @Override
-    public LoginInfo login(Emp emp) {
-        // 1. 调用 mapper 接口，根据用户名和密码查询员工信息
-        Emp e = empMapper.selectByUsernameAndPassword(emp);
-        // 2. 判断：判断登录信息是否正确，如果正确，则生成 token，如果不成功，则返回 null
-        if (e!= null) {
-            log.info("登录成功，员工信息: {}", e);
-            // 生成 JWT Token
-            Map<String, Object> claims = new HashMap<>();
-            claims.put("id", e.getId());
-            claims.put("username", e.getUsername());
-            String jwt = JWTUtils.generateJWTToken(claims);
-            return new LoginInfo(e.getId(), e.getUsername(), e.getName(), jwt);
+    public EmpLoginVO login(EmpLoginDTO dto) {
+        // 1. select employee by username
+        Emp emp = empMapper.getByUsername(dto.getUsername());
+
+        // 2. check if employee exists or password is correct
+        if (emp == null || !emp.getPassword().equals(dto.getPassword())) {
+            return null;
         }
-        return null;
+
+        // 3. generate JWT token
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("id", emp.getId());
+        claims.put("username", emp.getUsername());
+        String token = JWTUtils.generateJWTToken(claims);
+
+        // 4. construct and return vo
+        return EmpLoginVO.builder()
+                .id(emp.getId())
+                .username(emp.getUsername())
+                .name(emp.getName())
+                .token(token)
+                .build();
     }
 }

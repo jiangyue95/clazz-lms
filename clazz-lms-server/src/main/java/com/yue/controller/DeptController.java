@@ -1,7 +1,7 @@
 package com.yue.controller;
 
 import com.yue.anno.Log;
-import com.yue.pojo.Dept;
+import com.yue.pojo.entity.Dept;
 import com.yue.pojo.Result;
 import com.yue.service.DeptService;
 import lombok.extern.slf4j.Slf4j;

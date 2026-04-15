@@ -1,7 +1,7 @@
 package com.yue.service;
 
 import com.yue.pojo.PageResult;
-import com.yue.pojo.Student;
+import com.yue.pojo.entity.Student;
 import com.yue.pojo.StudentQueryParam;
 
 public interface StudentService {

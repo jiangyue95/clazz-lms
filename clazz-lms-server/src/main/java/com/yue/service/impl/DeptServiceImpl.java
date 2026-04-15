@@ -1,8 +1,8 @@
 package com.yue.service.impl;
 
-import com.yue.exception.DemptHasEmpException;
+import com.yue.exception.DeptHasEmpException;
 import com.yue.mapper.DeptMapper;
-import com.yue.pojo.Dept;
+import com.yue.pojo.entity.Dept;
 import com.yue.service.DeptService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ public class DeptServiceImpl implements DeptService {
         // 查询部门人数
         Integer studentCount = deptMapper.countByDeptId(id);
         if (studentCount > 0) {
-            throw new DemptHasEmpException("对不起, 该部门下有员工, 不能直接删除");
+            throw new DeptHasEmpException("对不起, 该部门下有员工, 不能直接删除");
         }
         deptMapper.deleteById(id);
     }

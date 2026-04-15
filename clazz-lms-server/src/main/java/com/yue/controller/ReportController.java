@@ -1,7 +1,8 @@
 package com.yue.controller;
 
-import com.yue.pojo.ClazzCount;
-import com.yue.pojo.JobOption;
+import com.yue.pojo.vo.ClazzCountVO;
+import com.yue.pojo.vo.JobOptionVO;
+import com.yue.pojo.vo.StudentDegreeVO;
 import com.yue.pojo.Result;
 import com.yue.service.ReportService;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Report controller
+ * Provide report statistics data
+ */
 @Slf4j
 @RequestMapping("/report")
 @RestController
@@ -28,8 +33,8 @@ public class ReportController {
     @GetMapping("/empJobData")
     public Result getEmpJobData(){
         log.info("统计员工职位人数");
-        JobOption jobOption = reportService.getEmpJobData();
-        return Result.success(jobOption);
+        JobOptionVO jobOptionVO = reportService.getEmpJobData();
+        return Result.success(jobOptionVO);
     }
 
     /**
@@ -49,15 +54,15 @@ public class ReportController {
      */
     @GetMapping("/studentCountData")
     public Result getStudentCountData() {
-        log.info("统计学员班级人数");
-        ClazzCount clazzCount = reportService.getStudentCountData();
-        return Result.success(clazzCount);
+        log.info("Number of students in the class");
+        ClazzCountVO clazzCountVO = reportService.getStudentCountData();
+        return Result.success(clazzCountVO);
     }
 
     @GetMapping("/studentDegreeData")
     public Result getStudentDegreeData() {
-        log.info("统计学员学历人数");
-        List<Map<String, Object>> degreeList = reportService.getStudentDegreeData();
+        log.info("Number of students with academic qualifications");
+        List<StudentDegreeVO> degreeList = reportService.getStudentDegreeData();
         return Result.success(degreeList);
     }
 }

@@ -59,7 +59,7 @@
         WHERE id = #{id}
     </update>
     <!-- 学员列表查询 -->
-    <select id="list" resultType="com.yue.pojo.Student">
+    <select id="list" resultType="com.yue.pojo.entity.Student">
         SELECT
         s.id,
         s.name,
@@ -100,7 +100,7 @@
         GROUP BY s.clazz_id
         ORDER BY num;
     </select>
-    <select id="countStudentDegreeData" resultType="java.util.Map">
+    <select id="countStudentDegreeData" resultType="com.yue.pojo.vo.StudentDegreeVO">
         SELECT
         (CASE degree WHEN 1 THEN '初中'
         WHEN 2 THEN '高中'

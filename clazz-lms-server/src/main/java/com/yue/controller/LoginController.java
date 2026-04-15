@@ -1,8 +1,8 @@
 package com.yue.controller;
 
-import com.yue.pojo.Emp;
-import com.yue.pojo.LoginInfo;
+import com.yue.pojo.dto.EmpLoginDTO;
 import com.yue.pojo.Result;
+import com.yue.pojo.vo.EmpLoginVO;
 import com.yue.service.EmpService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,14 +20,14 @@ public class LoginController {
     private EmpService empService;
 
     @PostMapping
-    public Result login(@RequestBody Emp emp) {
-        log.info("员工登录: {}", emp);
+    public Result login(@RequestBody EmpLoginDTO dto) {
+        log.info("Employee login: {}", dto.getUsername());
+        EmpLoginVO vo = empService.login(dto);
 
-        LoginInfo loginInfo = empService.login(emp);
-
-        if (loginInfo !=  null) {
-            return Result.success(loginInfo);
+        if (vo == null) {
+            return Result.error("Wrong username or password");
         }
-        return Result.error("用户名或密码错误");
+
+        return Result.success(vo);
     }
 }

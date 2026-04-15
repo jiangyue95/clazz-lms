@@ -4,7 +4,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.yue.mapper.StudentMapper;
 import com.yue.pojo.PageResult;
-import com.yue.pojo.Student;
+import com.yue.pojo.entity.Student;
 import com.yue.pojo.StudentQueryParam;
 import com.yue.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;

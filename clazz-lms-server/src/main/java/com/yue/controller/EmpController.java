@@ -1,10 +1,12 @@
 package com.yue.controller;
 
 import com.yue.anno.Log;
-import com.yue.pojo.Emp;
+import com.yue.pojo.dto.EmpListQueryDTO;
+import com.yue.pojo.entity.Emp;
 import com.yue.pojo.EmpQueryParam;
 import com.yue.pojo.PageResult;
 import com.yue.pojo.Result;
+import com.yue.pojo.vo.EmpVO;
 import com.yue.service.EmpService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,32 +28,15 @@ public class EmpController {
     @Autowired
     private ResourceUrlProvider resourceUrlProvider;
 
-//    /**
-//     * 分页查询
-//     * @return
-//     */
-//    @GetMapping
-//    public Result page(
-//            @RequestParam(defaultValue = "") String name,
-//            @RequestParam(defaultValue = "") Integer gender,
-//            @RequestParam(defaultValue = "1970-01-01") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate begin,
-//            @RequestParam(defaultValue = "2100-01-01") @DateTimeFormat(pattern = "yyyy-MM-dd")LocalDate end,
-//            @RequestParam(defaultValue = "1") Integer page,
-//            @RequestParam(defaultValue = "10") Integer pageSize){
-//        log.info("分页查询：{}, {}, {}, {}, {}, {}", name, gender, begin, end, page, pageSize);
-//        PageResult<Emp> pageResult = empService.list(name, gender, begin, end, page, pageSize);
-//        return Result.success(pageResult);
-//    }
-
     /**
-     * 根据条件查询列表
-     * @param empQueryParam
-     * @return
+     * Based on the query parameters, return a list of employee.
+     * @param empListQueryDTO query parameters
+     * @return a list of employee
      */
     @GetMapping
-    public Result page(EmpQueryParam empQueryParam){
-        log.info("分页查询：{}", empQueryParam);
-        PageResult<Emp> pageResult = empService.page(empQueryParam);
+    public Result page(EmpListQueryDTO empListQueryDTO){
+        log.info("Pagination Search：{}", empListQueryDTO);
+        PageResult<EmpVO> pageResult = empService.page(empListQueryDTO);
         return Result.success(pageResult);
     }
 
@@ -69,20 +54,14 @@ public class EmpController {
     }
 
     /**
-     * 删除员工
-     * @return
+     * Delete employee by id
+     * @param ids a list of employee id
+     * @return Result object
      */
-//    @DeleteMapping
-//    public Result delete(Integer[] ids) {
-//        log.info("删除员工信息：{}", Arrays.toString(ids));
-//        return Result.success();
-//
-//    }
-
     @Log
     @DeleteMapping
     public Result delete(@RequestParam List<Integer> ids) {
-        log.info("删除参数：{}", ids);
+        log.info("Delete parameter：{}", ids);
         empService.delete(ids);
         return Result.success();
     }

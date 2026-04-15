@@ -1,6 +1,6 @@
 package com.yue.service;
 
-import com.yue.pojo.Dept;
+import com.yue.pojo.entity.Dept;
 
 import java.util.List;
 

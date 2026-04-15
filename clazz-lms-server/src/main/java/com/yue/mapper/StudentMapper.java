@@ -1,7 +1,8 @@
 package com.yue.mapper;
 
-import com.yue.pojo.Student;
+import com.yue.pojo.entity.Student;
 import com.yue.pojo.StudentQueryParam;
+import com.yue.pojo.vo.StudentDegreeVO;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
@@ -76,6 +77,5 @@ public interface StudentMapper {
     @MapKey("clazz_name")
     List<Map<String, Object>> countStudentClazzData();
 
-    @MapKey("name")
-    List<Map<String, Object>> countStudentDegreeData();
+    List<StudentDegreeVO> countStudentDegreeData();
 }
