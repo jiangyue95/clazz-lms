@@ -3,8 +3,10 @@
         PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.yue.mapper.EmpMapper">
-    <!-- 根据 ID 更新员工的基本信息 -->
-    <!-- set 标签：自动生成 set 关键字；会自动删除掉更新字段后多余的 ","  -->
+
+    <!-- update employee basic information by employee id -->
+    <!-- The `set` tag: automatically generates the `set` keyword; -->
+    <!-- automatically removes redundant commas after updating fields. -->
     <update id="updateById">
         UPDATE emp
         <set>
@@ -23,7 +25,7 @@
         WHERE id = #{id}
     </update>
 
-    <!-- 批量删除员工的基本信息 -->
+    <!-- delete employee basic information by employee ids -->
     <delete id="deleteByIds">
         delete from emp where id in
         <foreach collection="ids" item="id" separator="," open="(" close=")">
@@ -55,22 +57,22 @@
 
     <select id="countEmpJobData" resultType="java.util.Map">
         SELECT
-        (CASE job WHEN 1 THEN '班主任'
-        WHEN 2 THEN '讲师'
-        WHEN 3 THEN '学工主管'
-        WHEN 4 THEN '教研主管'
-        WHEN 5 THEN '咨询师'
-        ELSE '其他' END) AS pos,
+        (CASE job WHEN 1 THEN 'head teacher'
+        WHEN 2 THEN 'lecturer'
+        WHEN 3 THEN 'Student Affairs Supervisor'
+        WHEN 4 THEN 'Teaching and Research Supervisor'
+        WHEN 5 THEN 'Consultant'
+        ELSE 'other' END) AS pos,
         COUNT(*) AS num
         from emp
         GROUP BY job
         ORDER BY num;
     </select>
 
-    <!-- 统计员工性别人数 -->
+    <!-- count employee basic information by gender -->
     <select id="countEmpGenderData" resultType="java.util.Map">
         SELECT
-        IF(gender = 1, '男性员工', '女性员工') AS name,
+        IF(gender = 1, 'male', 'female') AS name,
         count(*) AS value
         FROM emp
         GROUP BY gender;
@@ -93,6 +95,7 @@
         FROM emp
     </select>
 
+    <!-- query employee basic information by username -->
     <select id="getByUsername" resultType="com.yue.pojo.entity.Emp">
         SELECT id, username, password, name
         FROM emp
