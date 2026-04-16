@@ -2,6 +2,8 @@ package com.yue.service.impl;
 
 import com.yue.exception.DeptHasEmpException;
 import com.yue.mapper.DeptMapper;
+import com.yue.pojo.dto.DeptSaveDTO;
+import com.yue.pojo.dto.DeptUpdateDTO;
 import com.yue.pojo.entity.Dept;
 import com.yue.service.DeptService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,51 +12,80 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * department service implementation
+ */
 @Service
 public class DeptServiceImpl implements DeptService {
 
     @Autowired
     private DeptMapper deptMapper;
 
+    /**
+     * Query all departments
+     * @return all departments list
+     */
     @Override
     public List<Dept> findAll() {
         return deptMapper.findAll();
     }
 
     /**
-     * 根据 ID 删除部门
+     * Delete department by id
+     * @param id department ID
      */
     @Override
     public void deleteById(Integer id) {
-        // 查询部门人数
+        // 1. check if the department has employees
         Integer studentCount = deptMapper.countByDeptId(id);
         if (studentCount > 0) {
-            throw new DeptHasEmpException("对不起, 该部门下有员工, 不能直接删除");
+            throw new DeptHasEmpException("Sorry, please delete the employees first.");
         }
+
+        // 2. delete the department
         deptMapper.deleteById(id);
     }
 
+    /**
+     * add new department
+     * @param deptSaveDTO new department DTO
+     */
     @Override
-    public void add(Dept dept) {
-        // 1. 补全基础属性 - createTime，updateTime
-        dept.setCreateTime(LocalDateTime.now());
-        dept.setUpdateTime(LocalDateTime.now());
+    public void add(DeptSaveDTO deptSaveDTO) {
+        // 1. add basic attributes: createTime, updateTime
+        Dept dept = Dept.builder()
+                .name(deptSaveDTO.getName())
+                .createTime(LocalDateTime.now())
+                .updateTime(LocalDateTime.now())
+                .build();
 
-        // 2. 调用 Mapper 接口方法插入数据
+        // 2. Call insert Mapper method
         deptMapper.insert(dept);
     }
 
+    /**
+     * Query department info by id
+     * @param id department ID
+     * @return department info
+     */
     @Override
     public Dept getById(Integer id) {
         return deptMapper.getById(id);
     }
 
+    /**
+     * update department info
+     * @param deptUpdateDTO department info DTO
+     */
     @Override
-    public void update(Dept dept) {
-        // 补全基础属性
-        dept.setUpdateTime(LocalDateTime.now());
-        // 调用 Mapper 接口方法更新数据
+    public void update(DeptUpdateDTO deptUpdateDTO) {
+        // add basic attributes: updateTime
+        Dept dept = Dept.builder()
+                .id(deptUpdateDTO.getId())
+                .name(deptUpdateDTO.getName())
+                .updateTime(LocalDateTime.now())
+                .build();
+        // call update Mapper method
         deptMapper.update(dept);
     }
-
 }

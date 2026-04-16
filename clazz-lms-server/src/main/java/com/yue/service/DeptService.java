@@ -1,38 +1,43 @@
 package com.yue.service;
 
+import com.yue.pojo.dto.DeptSaveDTO;
+import com.yue.pojo.dto.DeptUpdateDTO;
 import com.yue.pojo.entity.Dept;
 
 import java.util.List;
 
+/**
+ * department service interface
+ */
 public interface DeptService {
     /**
-     * 查询所有部门
-     * @return
+     * Query all departments
+     * @return all departments list
      */
     List<Dept> findAll();
 
     /**
-     * 根据 id 删除部门
-     * @param id
+     * Delete department by id
+     * @param id department ID
      */
     void deleteById(Integer id);
 
     /**
-     * 新增部门
-     * @param dept
+     * Add new department
+     * @param deptSaveDTO new department DTO
      */
-    void add(Dept dept);
+    void add(DeptSaveDTO deptSaveDTO);
 
     /**
-     * 查询部门
-     * @param id
-     * @return
+     * Query department info by id
+     * @param id department ID
+     * @return department info
      */
     Dept getById(Integer id);
 
     /**
-     * 修改部门
-     * @param dept
+     * Update department info
+     * @param deptUpdateDTO department info DTO
      */
-    void update(Dept dept);
+    void update(DeptUpdateDTO deptUpdateDTO);
 }

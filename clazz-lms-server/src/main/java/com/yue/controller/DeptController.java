@@ -1,6 +1,8 @@
 package com.yue.controller;
 
 import com.yue.anno.Log;
+import com.yue.pojo.dto.DeptSaveDTO;
+import com.yue.pojo.dto.DeptUpdateDTO;
 import com.yue.pojo.entity.Dept;
 import com.yue.pojo.Result;
 import com.yue.service.DeptService;
@@ -10,107 +12,76 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Slf4j
-@RequestMapping("/depts")
-@RestController
+/**
+ * Department controller
+ * Dept: department
+ */
+@Slf4j // log annotation
+@RequestMapping("/depts") // request mapping annotation: /depts
+@RestController // rest controller annotation
 public class DeptController {
-
-//    private static final Logger log = LoggerFactory.getLogger(DeptController.class); // 固定的
 
     @Autowired
     private DeptService deptService;
 
-//    @RequestMapping(value = "/depts", method = RequestMethod.GET)
+    /**
+     * query all department info
+     * @return all department info
+     */
     @GetMapping
     public Result list() {
-//        System.out.println("查询全部部门数据");
-        log.info("查询全部部门数据");
+        log.info("Query all department info");
         List<Dept> deptList = deptService.findAll();
         return Result.success(deptList);
     }
 
-    // 方法一：通过原始方式获得 ID
-//    @DeleteMapping("/depts") //限定仅处理 DELETE 方法的请求
-//    public Result delete(HttpServletRequest request) {
-//        String idStr = request.getParameter("id"); // 获取的参数，默认是 String 类型的
-//        int id = Integer.parseInt(idStr); // 转换成 Integer 类型
-//        System.out.println("根据 ID 删除部门：" + id);
-//        return Result.success();
-//    }
-
     /**
-     * 方法二：通过 @RequestParam 注解获得 ID
-     * 注意事项：一旦声明了 @RequestParam，该参数在请求时必须传递。
-     * 如果不传递将会报错。（默认 required 为 true）
-     */
-//    @DeleteMapping("/depts")
-//    public Result delete(@RequestParam(value = "id", required = false) Integer deptId) {
-//        System.out.println("根据 ID 删除部门：" + deptId);
-//        return Result.success();
-//    }
-
-    /**
-     * 删除部门 方式三：省略 @RequestParam （如果请求参数名与形参变量名相同，直接定义方法形参即可接收）（推荐）
-     * @param id
-     * @return
-     */
-    @Log
-    @DeleteMapping()
-    public Result delete(Integer id) {
-        log.info("根据 ID 删除部门：{}", id);
-        deptService.deleteById(id);
-        return Result.success();
-    }
-
-    // Controller 类中的响应处理方法
-    /**
-     * 新增部门
-     * @param dept 接收请求体中的 dept 的对象
-     * @return
+     * add new department
+     * @param deptSaveDTO new department info
+     * @return add success info
      */
     @Log
     @PostMapping
-    public Result add(@RequestBody Dept dept) {
-//        System.out.println("添加部门：" + dept);
-        log.info("添加部门：{}", dept);
-        deptService.add(dept);
+    public Result add(@RequestBody DeptSaveDTO deptSaveDTO) {
+        log.info("Add new department：{}", deptSaveDTO);
+        deptService.add(deptSaveDTO);
         return Result.success();
     }
 
     /**
-     * 根据 id 查询部门
-     * @param id 部门 ID
-     * @return
+     * query department info by id
+     * @param id department ID
+     * @return department info
      */
     @GetMapping("/{id}")
     public Result getInfo(@PathVariable Integer id) {
-        log.info("根据 ID 查询部门：{}", id);
+        log.info("Query department info by id：{}", id);
         Dept dept = deptService.getById(id);
         return Result.success(dept);
     }
 
     /**
-     * 修改部门
-     * @param dept 修改的部门对象
-     * @return 修改成功信息
+     * update department info
+     * @param deptUpdateDTO department info
+     * @return update success info
      */
     @Log
     @PutMapping
-    public Result update(@RequestBody Dept dept) {
-        log.info("修改部门：{}", dept);
-        deptService.update(dept);
+    public Result update(@RequestBody DeptUpdateDTO deptUpdateDTO) {
+        log.info("Update department：{}", deptUpdateDTO);
+        deptService.update(deptUpdateDTO);
         return Result.success();
     }
 
     /**
-     * 根据 id 删除部门
-     * @param id 部门 ID
-     * @return 删除成功信息
+     * delete department by id
+     * @param id department ID
+     * @return delete success info
      */
     @Log
     @DeleteMapping("/{id}")
     public Result deleteDeptById(@PathVariable Integer id) {
-        log.info("根据 ID 删除部门：{}", id);
+        log.info("Delete department by id：{}", id);
         deptService.deleteById(id);
         return Result.success();
     }
