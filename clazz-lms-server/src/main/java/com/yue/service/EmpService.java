@@ -3,6 +3,7 @@ package com.yue.service;
 import com.yue.pojo.dto.EmpListQueryDTO;
 import com.yue.pojo.dto.EmpLoginDTO;
 import com.yue.pojo.dto.EmpSaveDTO;
+import com.yue.pojo.dto.EmpUpdateDTO;
 import com.yue.pojo.entity.Emp;
 import com.yue.pojo.PageResult;
 import com.yue.pojo.vo.EmpInfoVO;
@@ -39,13 +40,17 @@ public interface EmpService {
      */
     EmpInfoVO getInfo(Integer id);
 
-    void update(Emp emp);
+    /**
+     * Update employee information
+     * @param empUpdateDTO employee update DTO contains employee information and its experience list
+     */
+    void update(EmpUpdateDTO empUpdateDTO);
 
     /**
-     * 查询所有员工信息
-     * @return 返回一个 员工信息列表
+     * query all employee basic information
+     * @return a list of employee basic information
      */
-    List<Emp> getAllEmp();
+    List<EmpVO> getAllEmp();
 
     /**
      * Employee login

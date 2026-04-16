@@ -76,18 +76,18 @@
         GROUP BY gender;
     </select>
 
-    <select id="queryAll" resultType="com.yue.pojo.entity.Emp">
+    <!-- query all employee basic information -->
+    <select id="queryAll" resultType="com.yue.pojo.vo.EmpVO">
         SELECT
             id,
             username,
-            password,
             name,
-            entry_date,
             gender,
             image,
             job,
             salary,
             dept_id,
+            entry_date,
             create_time,
             update_time
         FROM emp

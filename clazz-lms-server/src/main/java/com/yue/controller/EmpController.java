@@ -3,6 +3,7 @@ package com.yue.controller;
 import com.yue.anno.Log;
 import com.yue.pojo.dto.EmpListQueryDTO;
 import com.yue.pojo.dto.EmpSaveDTO;
+import com.yue.pojo.dto.EmpUpdateDTO;
 import com.yue.pojo.entity.Emp;
 import com.yue.pojo.EmpQueryParam;
 import com.yue.pojo.PageResult;
@@ -81,22 +82,27 @@ public class EmpController {
         return Result.success(empInfoVO);
     }
 
+    /**
+     * Update employee info
+     * @param empUpdateDTO employee update dto
+     * @return Result object
+     */
     @Log
     @PutMapping
-    public Result update(@RequestBody Emp emp) {
-        log.info("修改员工：{}", emp);
-        empService.update(emp);
+    public Result update(@RequestBody EmpUpdateDTO empUpdateDTO) {
+        log.info("Update employee info：{}", empUpdateDTO);
+        empService.update(empUpdateDTO);
         return Result.success();
     }
 
     /**
-     * 查询全部员工
-     * @return 包含全部员工数据的 Result 对象
+     * query all employee basic information
+     * @return a list of employee basic information
      */
     @GetMapping("/list")
     public Result getAllEmp() {
-        log.info("查询全部员工");
-        List<Emp> allEmps = empService.getAllEmp();
+        log.info("query all employee basic information");
+        List<EmpVO> allEmps = empService.getAllEmp();
         return Result.success(allEmps);
     }
 }

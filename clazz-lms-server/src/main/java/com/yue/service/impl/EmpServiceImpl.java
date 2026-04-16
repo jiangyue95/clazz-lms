@@ -4,10 +4,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.yue.mapper.EmpExprMapper;
 import com.yue.mapper.EmpMapper;
-import com.yue.pojo.dto.EmpListQueryDTO;
-import com.yue.pojo.dto.EmpLoginDTO;
-import com.yue.pojo.dto.EmpSaveDTO;
-import com.yue.pojo.dto.LoginInfo;
+import com.yue.pojo.dto.*;
 import com.yue.pojo.entity.Emp;
 import com.yue.pojo.entity.EmpExpr;
 import com.yue.pojo.entity.EmpLog;
@@ -151,34 +148,53 @@ public class EmpServiceImpl implements EmpService {
         return empInfoVO;
     }
 
+    /**
+     * Update employee information
+     * @param empUpdateDTO employee update DTO contains employee information and its experience list
+     */
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void update(Emp emp) {
-        // 1. 根据 ID 修改员工的基本信息
-        emp.setUpdateTime(LocalDateTime.now());
+    public void update(EmpUpdateDTO empUpdateDTO) {
+        // 1. check if the employee exists or not
+        Emp existingEmp = empMapper.getById(empUpdateDTO.getId());
+        if (existingEmp == null) {
+            throw new RuntimeException("Employee not found: " + empUpdateDTO.getId());
+        }
+
+        // 2. update employee basic information
+        Emp emp = Emp.builder()
+                .id(existingEmp.getId())
+                .username(empUpdateDTO.getUsername())
+                .name(empUpdateDTO.getName())
+                .gender(empUpdateDTO.getGender())
+                .job(empUpdateDTO.getJob())
+                .entryDate(empUpdateDTO.getEntryDate())
+                .deptId(empUpdateDTO.getDeptId())
+                .phone(empUpdateDTO.getPhone())
+                .salary(empUpdateDTO.getSalary())
+                .image(empUpdateDTO.getImage())
+                .updateTime(LocalDateTime.now())
+                .build();
         empMapper.updateById(emp);
 
-        // 2. 根据 ID 修改员工的工作经历
-        // 2.1 先根据员工 ID 删除原有的工作经历
+        // 3. delete the old work experience
         empExprMapper.deleteByEmpIds(Arrays.asList(emp.getId()));
 
-        // 2.2 再添加这个员工新的工作经历
-//        List<EmpExpr> exprList = emp.getExprList();
-//        if(!CollectionUtils.isEmpty(exprList)){
-//            // 为 expr 的 emp_id 赋值
-//            exprList.forEach(empExpr -> empExpr.setEmpId(emp.getId()));
-//            empExprMapper.insertBatch(exprList);
-//        }
+        // 4. insert new work experience into database
+        List<EmpExpr> exprList = empUpdateDTO.getExprList();
+        if (!CollectionUtils.isEmpty(exprList)) {
+            exprList.forEach(empExpr -> empExpr.setEmpId(emp.getId()));
+            empExprMapper.insertBatch(exprList);
+        }
     }
 
     /**
-     * 查询所有员工信息
-     * @return 返回一列表，包含所有员工信息
+     * query all employee basic information
+     * @return a list of employee basic information
      */
     @Override
-    public List<Emp> getAllEmp() {
-        List<Emp> allEmps = empMapper.queryAll();
-        return allEmps;
+    public List<EmpVO> getAllEmp() {
+        return empMapper.queryAll();
     }
 
     /**

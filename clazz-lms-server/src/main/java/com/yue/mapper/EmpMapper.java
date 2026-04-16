@@ -60,7 +60,7 @@ public interface EmpMapper {
     List<Map<String, Object>> countEmpGenderData();
 
 
-    List<Emp> queryAll();
+    List<EmpVO> queryAll();
 
     @Select("select id, username, name from emp where username = #{username} and password = #{password}")
     Emp selectByUsernameAndPassword(Emp emp);
