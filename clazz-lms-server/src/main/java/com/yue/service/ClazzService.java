@@ -1,43 +1,49 @@
 package com.yue.service;
 
+import com.yue.pojo.dto.ClazzSaveDTO;
+import com.yue.pojo.dto.ClazzUpdateDTO;
 import com.yue.pojo.entity.Clazz;
 import com.yue.pojo.ClazzQueryParam;
 import com.yue.pojo.PageResult;
+import com.yue.pojo.vo.ClazzVO;
 
 import java.util.List;
 
+/**
+ * clazz(class) service interface
+ */
 public interface ClazzService {
 
-    PageResult<Clazz> page(ClazzQueryParam clazzQueryParam);
+    PageResult<ClazzVO> page(ClazzQueryParam clazzQueryParam);
 
     /**
-     * 保存班级信息
-     * @param clazz 班级对象
+     * Add new class to database
+     * @param clazzSaveDTO clazz save dto
      */
-    void save(Clazz clazz);
+    void save(ClazzSaveDTO clazzSaveDTO);
 
     /**
-     * 根据ID在数据库查询班级信息
-     * @param id 传入的 id
-     * @return 返回一个 Clazz 对象
+     * query clazz by id
+     * @param id clazz id
+     * @return clazz vo object
      */
-    Clazz getClassById(Integer id);
+    ClazzVO getClassById(Integer id);
 
     /**
-     * 根据传入 Clazz 对象修改已有的 Clazz 对象
-     * @param clazz 传入的 Clazz 对象
+     * modify clazz by id and update dto
+     * @param clazzUpdateDTO clazz update dto
      */
-    void modifyClazz(Clazz clazz);
+    void modifyClazz(ClazzUpdateDTO clazzUpdateDTO);
 
     /**
-     * 根据传入的 id 删除 clazz
-     * @param id 要删除的 clazz id
+     * delete clazz by id
+     * @param id clazz id
      */
     void deleteClazzById(Integer id);
 
     /**
-     * 获取全部 Clazz
-     * @return
+     * query all clazz
+     * @return clazz vo list object
      */
-    List<Clazz> getAllClazzs();
+    List<ClazzVO> getAllClazzs();
 }

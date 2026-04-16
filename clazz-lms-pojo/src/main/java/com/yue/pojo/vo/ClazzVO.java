@@ -1,4 +1,4 @@
-package com.yue.pojo.entity;
+package com.yue.pojo.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * clazz(class) entity
+ * clazz(class) view object
  * Because class is a reserved word in Java,
  * hence use clazz.
  */
@@ -17,38 +17,16 @@ import java.time.LocalDateTime;
 @Builder
 @Data
 @NoArgsConstructor
-public class Clazz {
-
-    // primary key
+public class ClazzVO {
     private Integer id;
-
-    // class name
     private String name;
-
-    // classroom
     private String room;
-
-    // class begin date
     private LocalDate beginDate;
-
-    // class end date
     private LocalDate endDate;
-
-    // the id of head teacher of the class
     private Integer masterId;
-
-    // subject：
-    // 1, Java;
-    // 2, Frontend;
-    // 3, big data;
-    // 4, python;
-    // 5, Go
-    // 6, Embedded development
     private Integer subject;
-
-    // create time
     private LocalDateTime createTime;
-
-    // update time
     private LocalDateTime updateTime;
+    private String masterName;
+    private String status;
 }

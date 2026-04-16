@@ -5,10 +5,13 @@ import com.github.pagehelper.PageHelper;
 import com.yue.exception.ClazzHasStudentException;
 import com.yue.mapper.ClazzMapper;
 import com.yue.mapper.StudentMapper;
+import com.yue.pojo.dto.ClazzSaveDTO;
+import com.yue.pojo.dto.ClazzUpdateDTO;
 import com.yue.pojo.entity.Clazz;
 import com.yue.pojo.ClazzQueryParam;
 
 import com.yue.pojo.PageResult;
+import com.yue.pojo.vo.ClazzVO;
 import com.yue.service.ClazzService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * clazz(class) service implementation
+ */
 @Service
 public class ClazzServiceImpl implements ClazzService {
 
@@ -26,51 +32,86 @@ public class ClazzServiceImpl implements ClazzService {
     @Autowired
     private StudentMapper studentMapper;
 
+    /**
+     * query clazz by query param
+     * @param clazzQueryParam query param
+     * @return
+     */
     @Override
-    public PageResult<Clazz> page(ClazzQueryParam clazzQueryParam) {
-        // 1. 设置分页参数（PageHelper）
+    public PageResult<ClazzVO> page(ClazzQueryParam clazzQueryParam) {
+        // 1. Set pagination parameter for PageHelper
         PageHelper.startPage(clazzQueryParam.getPage(), clazzQueryParam.getPageSize());
 
-        // 2. 执行查询
-        List<Clazz> clazzList = clazzMapper.list(clazzQueryParam);
+        // 2. query clazz by query param
+        List<ClazzVO> clazzList = clazzMapper.list(clazzQueryParam);
 
-        // 3. 计算课程状态
+        // 3. calculate class status
         LocalDate now = LocalDate.now();
-        for (Clazz clazz : clazzList) {
-            if (clazz.getBeginDate() != null && clazz.getEndDate() != null) {
-                if (now.isBefore(clazz.getBeginDate())) {
-                    clazz.setStatus("未开班");
-                } else if (now.isAfter(clazz.getEndDate())) {
-                    clazz.setStatus("已结课");
+        for (ClazzVO clazzVO : clazzList) {
+            if (clazzVO.getBeginDate() != null && clazzVO.getEndDate() != null) {
+                if (now.isBefore(clazzVO.getBeginDate())) {
+                    clazzVO.setStatus("Classes not yet started");
+                } else if (now.isAfter(clazzVO.getEndDate())) {
+                    clazzVO.setStatus("Course completed");
                 } else {
-                    clazz.setStatus("已开班");
+                    clazzVO.setStatus("Classes have already started");
                 }
             } else {
-                clazz.setStatus("未知"); // 或者不做处理
+                clazzVO.setStatus("Other");
             }
         }
 
-        // 4. 封装结果
-        Page<Clazz> p = (Page<Clazz>) clazzList;
+        // 4. return page result
+        Page<ClazzVO> p = (Page<ClazzVO>) clazzList;
         return new PageResult<>(p.getTotal(), p.getResult());
     }
 
+    /**
+     * Add new class to database
+     * @param clazzSaveDTO clazz save dto
+     */
     @Override
-    public void save(Clazz clazz) {
-        clazz.setCreateTime(LocalDateTime.now());
-        clazz.setUpdateTime(LocalDateTime.now());
+    public void save(ClazzSaveDTO clazzSaveDTO) {
+        Clazz clazz = Clazz.builder()
+                .name(clazzSaveDTO.getName())
+                .room(clazzSaveDTO.getRoom())
+                .beginDate(clazzSaveDTO.getBeginDate())
+                .endDate(clazzSaveDTO.getEndDate())
+                .masterId(clazzSaveDTO.getMasterId())
+                .subject(clazzSaveDTO.getSubject())
+                .createTime(LocalDateTime.now())
+                .updateTime(LocalDateTime.now())
+                .build();
         clazzMapper.insert(clazz);
     }
 
+    /**
+     * query clazz by id
+     * @param id clazz id
+     * @return clazz
+     */
     @Override
-    public Clazz getClassById(Integer id) {
-        Clazz clazz = clazzMapper.selectById(id);
-        return clazz;
+    public ClazzVO getClassById(Integer id) {
+        ClazzVO clazzVO = clazzMapper.selectById(id);
+        return clazzVO;
     }
 
+    /**
+     * update clazz by id
+     * @param clazzUpdateDTO clazz update dto
+     */
     @Override
-    public void modifyClazz(Clazz clazz) {
-        clazz.setUpdateTime(LocalDateTime.now());
+    public void modifyClazz(ClazzUpdateDTO clazzUpdateDTO) {
+        Clazz clazz = Clazz.builder()
+                .id(clazzUpdateDTO.getId())
+                .name(clazzUpdateDTO.getName())
+                .room(clazzUpdateDTO.getRoom())
+                .beginDate(clazzUpdateDTO.getBeginDate())
+                .endDate(clazzUpdateDTO.getEndDate())
+                .masterId(clazzUpdateDTO.getMasterId())
+                .subject(clazzUpdateDTO.getSubject())
+                .updateTime(LocalDateTime.now())
+                .build();
         clazzMapper.modifyClazz(clazz);
     }
 
@@ -86,8 +127,8 @@ public class ClazzServiceImpl implements ClazzService {
     }
 
     @Override
-    public List<Clazz> getAllClazzs() {
-        List<Clazz> clazzList = clazzMapper.getAllClazzs();
+    public List<ClazzVO> getAllClazzs() {
+        List<ClazzVO> clazzList = clazzMapper.getAllClazzs();
         return clazzList;
     }
 }
