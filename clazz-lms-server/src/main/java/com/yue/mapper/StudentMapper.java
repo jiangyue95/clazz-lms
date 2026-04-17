@@ -77,11 +77,16 @@ public interface StudentMapper {
     void modifyViolationScore(Integer id, Integer score);
 
     /**
-     * 获取班级人数
-     * @return 班级人数
+     * Get clazz(class) student count data
+     * @return a map of clazz(class) name and count
      */
     @MapKey("clazz_name")
     List<Map<String, Object>> countStudentClazzData();
 
-    List<StudentDegreeVO> countStudentDegreeData();
+    /**
+     * Get student degree data
+     * @return a map of degree and count
+     */
+    @MapKey("name")
+    List<Map<String, Object>> countStudentDegreeData();
 }

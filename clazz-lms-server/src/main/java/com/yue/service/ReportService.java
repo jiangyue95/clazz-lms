@@ -1,11 +1,8 @@
 package com.yue.service;
 
-import com.yue.pojo.vo.ClazzCountVO;
-import com.yue.pojo.vo.JobOptionVO;
-import com.yue.pojo.vo.StudentDegreeVO;
+import com.yue.pojo.vo.*;
 
 import java.util.List;
-import java.util.Map;
 
 public interface ReportService {
 
@@ -13,23 +10,23 @@ public interface ReportService {
      * 统计员工职位信息
      * @return
      */
-    JobOptionVO getEmpJobData();
+    EmpJobOptionVO getEmpJobData();
 
     /**
-     * 统计员工性别信息
-     * @return
+     * Get employee gender data
+     * @return a list of employee gender vo
      */
-    List<Map<String, Object>> getGenderData();
+    List<EmpGenderVO> getGenderData();
 
     /**
-     * 统计学生信息
-     * @return
+     * Get clazz(class) student count data
+     * @return a ClassCountVO object
      */
     ClazzCountVO getStudentCountData();
 
     /**
-     * 统计学生学历信息
-     * @return
+     * Get student degree data
+     * @return a list of StudentDegreeVO objects
      */
     List<StudentDegreeVO> getStudentDegreeData();
 }

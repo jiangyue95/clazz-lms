@@ -3,13 +3,16 @@ package com.yue.service;
 import com.yue.pojo.entity.OperateLog;
 import com.yue.pojo.PageResult;
 
+/**
+ * Log service interface
+ */
 public interface LogService {
 
     /**
-     * 分页查询出日志
-     * @param page 页码
-     * @param pageSize 每页数据量
-     * @return PageResult<OperateLog> 对象
+     * pagination query for log
+     * @param page page number
+     * @param pageSize page size per page
+     * @return PageResult<OperateLog> object
      */
     PageResult<OperateLog> list(Integer page, Integer pageSize);
 }

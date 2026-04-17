@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Log controller
+ */
 @Slf4j
 @RequestMapping("/log")
 @RestController
@@ -18,6 +21,12 @@ public class LogController {
     @Autowired
     private LogService logService;
 
+    /**
+     * pagination query for log
+     * @param page page number
+     * @param pageSize page size per page
+     * @return PageResult<OperateLog> object
+     */
     @GetMapping("/page")
     public Result list(Integer page, Integer pageSize) {
         log.info("分页查询: page={}, pageSize={}", page, pageSize);

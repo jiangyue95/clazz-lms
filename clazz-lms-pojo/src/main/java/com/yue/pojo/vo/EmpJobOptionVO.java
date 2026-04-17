@@ -14,7 +14,7 @@ import java.util.List;
 @Builder
 @Data
 @NoArgsConstructor
-public class JobOptionVO {
+public class EmpJobOptionVO {
     private List jobList;
     private List dataList;
 }

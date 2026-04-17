@@ -101,15 +101,15 @@
         GROUP BY s.clazz_id
         ORDER BY num;
     </select>
-    <select id="countStudentDegreeData" resultType="com.yue.pojo.vo.StudentDegreeVO">
+    <select id="countStudentDegreeData" resultType="java.util.Map">
         SELECT
-        (CASE degree WHEN 1 THEN '初中'
-        WHEN 2 THEN '高中'
-        WHEN 3 THEN '大专'
-        WHEN 4 THEN '本科'
-        WHEN 5 THEN '硕士'
-        WHEN 5 THEN '博士'
-        ELSE '其他' END) AS name,
+        (CASE degree WHEN 1 THEN 'middle school'
+        WHEN 2 THEN 'high school'
+        WHEN 3 THEN 'detailed education'
+        WHEN 4 THEN 'bachelor'
+        WHEN 5 THEN 'master'
+        WHEN 6 THEN 'doctor'
+        ELSE 'other' END) AS name,
         COUNT(*) AS value
         FROM student
         GROUP BY degree

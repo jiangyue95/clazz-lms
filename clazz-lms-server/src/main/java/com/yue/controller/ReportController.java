@@ -1,7 +1,8 @@
 package com.yue.controller;
 
 import com.yue.pojo.vo.ClazzCountVO;
-import com.yue.pojo.vo.JobOptionVO;
+import com.yue.pojo.vo.EmpGenderVO;
+import com.yue.pojo.vo.EmpJobOptionVO;
 import com.yue.pojo.vo.StudentDegreeVO;
 import com.yue.pojo.Result;
 import com.yue.service.ReportService;
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Report controller
@@ -27,30 +27,30 @@ public class ReportController {
     private ReportService reportService;
 
     /**
-     * 统计员工职位人数
-     * @return
+     * Get employee job data
+     * @return a result contains an EmpJobOptionVO object
      */
     @GetMapping("/empJobData")
     public Result getEmpJobData(){
-        log.info("统计员工职位人数");
-        JobOptionVO jobOptionVO = reportService.getEmpJobData();
-        return Result.success(jobOptionVO);
+        log.info("Employee job position data");
+        EmpJobOptionVO empJobOptionVO = reportService.getEmpJobData();
+        return Result.success(empJobOptionVO);
     }
 
     /**
-     * 统计员工性别人数
-     * @return
+     * Get employee gender data
+     * @return a result contains a list of EmpGenderVO objects
      */
     @GetMapping("/empGenderData")
     public Result getGenderData() {
-        log.info("统计员工性别人数");
-        List<Map<String, Object>> genderList = reportService.getGenderData();
+        log.info("Get employee gender data");
+        List<EmpGenderVO> genderList = reportService.getGenderData();
         return Result.success(genderList);
     }
 
     /**
-     * 统计学员班级人数
-     * @return
+     * Get clazz(class) student count data
+     * @return a Result object contains a ClassCountVO object
      */
     @GetMapping("/studentCountData")
     public Result getStudentCountData() {
@@ -59,6 +59,10 @@ public class ReportController {
         return Result.success(clazzCountVO);
     }
 
+    /**
+     * Get student degree data
+     * @return a result contains a list of StudentDegreeVO objects
+     */
     @GetMapping("/studentDegreeData")
     public Result getStudentDegreeData() {
         log.info("Number of students with academic qualifications");

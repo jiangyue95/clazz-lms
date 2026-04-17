@@ -2,9 +2,7 @@ package com.yue.service.impl;
 
 import com.yue.mapper.EmpMapper;
 import com.yue.mapper.StudentMapper;
-import com.yue.pojo.vo.ClazzCountVO;
-import com.yue.pojo.vo.JobOptionVO;
-import com.yue.pojo.vo.StudentDegreeVO;
+import com.yue.pojo.vo.*;
 import com.yue.service.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,6 +10,10 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Report service implementation
+ * Provide report statistics data
+ */
 @Service
 public class ReportServiceImpl implements ReportService {
 
@@ -21,32 +23,34 @@ public class ReportServiceImpl implements ReportService {
     private StudentMapper studentMapper;
 
     /**
-     * 获取员工职位人数
-     * @return JobOptionVO 职位数据
+     * Get employee job position data
+     * @return a EmpJobOptionVO object
      */
     @Override
-    public JobOptionVO getEmpJobData() {
-        // 1. 调用用 Mapper 接口，获取统计数据
+    public EmpJobOptionVO getEmpJobData() {
         List<Map<String, Object>> list = empMapper.countEmpJobData();
 
-        // 2. 组装结果，并返回
         List<Object> jobList = list.stream().map(dataMap -> dataMap.get("pos")).toList();
         List<Object> dataList = list.stream().map(dataMap -> dataMap.get("num")).toList();
-        return JobOptionVO.builder().jobList(jobList).dataList(dataList).build();
+        return EmpJobOptionVO.builder().jobList(jobList).dataList(dataList).build();
     }
 
     /**
-     * 获取员工性别人数
-     * @return List<Map<String, Object>>
+     * Get employee gender data
+     * @return a list of employee gender vo
      */
     @Override
-    public List<Map<String, Object>> getGenderData() {
-        return empMapper.countEmpGenderData();
+    public List<EmpGenderVO> getGenderData() {
+        List<Map<String, Object>> rawList = empMapper.countEmpGenderData();
+        return rawList.stream().map(dataMap -> EmpGenderVO.builder()
+                .name((String) dataMap.get("name"))
+                .value((Long) dataMap.get("value"))
+                .build()).toList();
     }
 
     /**
-     * 获取学员班级人数
-     * @return ClazzCountVO 对象
+     * Get clazz(class) student count data
+     * @return a ClazzCountVO object
      */
     @Override
     public ClazzCountVO getStudentCountData() {
@@ -56,8 +60,16 @@ public class ReportServiceImpl implements ReportService {
         return ClazzCountVO.builder().clazzList(clazzList).dataList(dataList).build();
     }
 
+    /**
+     * Get student degree data
+     * @return a list of student degree data vo
+     */
     @Override
     public List<StudentDegreeVO> getStudentDegreeData() {
-        return studentMapper.countStudentDegreeData();
+        List<Map<String, Object>> list = studentMapper.countStudentDegreeData();
+        return list.stream().map(dataMap -> StudentDegreeVO.builder()
+                .name((String) dataMap.get("name"))
+                .value(((Long) dataMap.get("value")).intValue())
+                .build()).toList();
     }
 }
