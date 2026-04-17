@@ -37,7 +37,7 @@
     <update id="update">
         Update student
         <set>
-            <if test="name != null and no != ''">name = #{name},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
             <if test="no != null and no != ''">no = #{no},</if>
             <if test="gender != null">gender = #{gender},</if>
             <if test="phone != null and phone != ''">phone = #{phone},</if>
@@ -58,8 +58,9 @@
         SET violation_score = violation_score + #{score}, violation_count = violation_count + 1
         WHERE id = #{id}
     </update>
-    <!-- 学员列表查询 -->
-    <select id="list" resultType="com.yue.pojo.entity.Student">
+
+    <!-- Student list query -->
+    <select id="list" resultType="com.yue.pojo.vo.StudentVO">
         SELECT
         s.id,
         s.name,

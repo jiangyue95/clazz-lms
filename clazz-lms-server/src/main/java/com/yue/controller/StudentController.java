@@ -3,13 +3,18 @@ package com.yue.controller;
 import com.yue.anno.Log;
 import com.yue.pojo.PageResult;
 import com.yue.pojo.Result;
-import com.yue.pojo.entity.Student;
+import com.yue.pojo.dto.StudentSaveDTO;
+import com.yue.pojo.dto.StudentUpdateDTO;
 import com.yue.pojo.StudentQueryParam;
+import com.yue.pojo.vo.StudentVO;
 import com.yue.service.StudentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * StudentController class
+ */
 @Slf4j
 @RequestMapping("/students")
 @RestController
@@ -19,59 +24,59 @@ public class StudentController {
     private StudentService studentService;
 
     /**
-     * 根据查询参数获取 Student 对象列表
-     * @param studentQueryParam 封装了查询参数的对象
-     * @return 返回 Result 对象
+     * query student list based on query params
+     * @param studentQueryParam query params
+     * @return
      */
     @GetMapping
     public Result page(StudentQueryParam studentQueryParam) {
-        log.info("学生列表查询：{}", studentQueryParam);
-        PageResult<Student> pageResult = studentService.page(studentQueryParam);
+        log.info("Student list query：{}", studentQueryParam);
+        PageResult<StudentVO> pageResult = studentService.page(studentQueryParam);
         return Result.success(pageResult);
     }
 
     /**
-     * 根据请求体中的信息新增学员
-     * @param student 请求体中的学员信息
-     * @return 返回 Result 对象
+     * add new student
+     * @param studentSaveDTO student save dto object
+     * @return add result
      */
     @Log
     @PostMapping
-    public Result save(@RequestBody Student student) {
-        log.info("增加学员：{}", student);
-        studentService.add(student);
+    public Result save(@RequestBody StudentSaveDTO studentSaveDTO) {
+        log.info("Add new student：{}", studentSaveDTO);
+        studentService.add(studentSaveDTO);
         return Result.success();
     }
 
     /**
-     * 根据 id 获取学生对象
-     * @param id 路径中的 id
-     * @return 返回 Result 对象
+     * query student by id
+     * @param id student id
+     * @return student vo
      */
     @GetMapping("/{id}")
     public Result get(@PathVariable Integer id) {
         log.info("查询学员：{}", id);
-        Student student = studentService.getStudentById(id);
-        return Result.success(student);
+        StudentVO studentVO = studentService.getStudentById(id);
+        return Result.success(studentVO);
     }
 
     /**
-     * 修改学员信息
-     * @param student 请求体中的学员信息
-     * @return 返回 Result 对象
+     * update student info
+     * @param studentUpdateDTO student update dto object
+     * @return update result object
      */
     @Log
     @PutMapping
-    public Result modifyStudentInfo(@RequestBody Student student) {
-        log.info("修改学员信息：{}", student);
-        studentService.modifyStudentInfo(student);
+    public Result modifyStudentInfo(@RequestBody StudentUpdateDTO studentUpdateDTO) {
+        log.info("Update student info：{}", studentUpdateDTO);
+        studentService.modifyStudentInfo(studentUpdateDTO);
         return Result.success();
     }
 
     /**
-     * 根据 id 删除学员
-     * @param id 删除的 id
-     * @return 删除结果
+     * delete student by id
+     * @param id student id
+     * @return delete result object
      */
     @Log
     @DeleteMapping("/{id}")
@@ -82,15 +87,15 @@ public class StudentController {
     }
 
     /**
-     * 违纪处理
-     * @param id 违纪的学员 id
-     * @param score 扣的分数
-     * @return 扣分结果
+     * violation violation score
+     * @param id student id
+     * @param score violation score object
+     * @return violation result object
      */
     @Log
     @PutMapping("/violation/{id}/{score}")
     public Result modifyViolationScore(@PathVariable Integer id, @PathVariable Integer score) {
-        log.info("违纪处理: {}, {}", id, score);
+        log.info("Violation operation: {}, {}", id, score);
         studentService.modifyViolationScore(id, score);
         return Result.success();
     }

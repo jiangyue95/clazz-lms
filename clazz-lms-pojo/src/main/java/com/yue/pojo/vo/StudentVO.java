@@ -1,4 +1,4 @@
-package com.yue.pojo.entity;
+package com.yue.pojo.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,15 +9,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * student entity
+ * student view object (VO)
  */
 @AllArgsConstructor
 @Builder
 @Data
 @NoArgsConstructor
-public class Student {
-
-    // primary key
+public class StudentVO {
     private Integer id;
 
     // student name
@@ -67,4 +65,8 @@ public class Student {
 
     // update time
     private LocalDateTime updateTime;
+
+    // the name of clazz(class)
+    // this name is searched by the clazzId
+    private String clazzName;
 }

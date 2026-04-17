@@ -3,38 +3,44 @@ package com.yue.mapper;
 import com.yue.pojo.entity.Student;
 import com.yue.pojo.StudentQueryParam;
 import com.yue.pojo.vo.StudentDegreeVO;
+import com.yue.pojo.vo.StudentVO;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 import java.util.Map;
 
+/**
+ * StudentMapper interface
+ */
 @Mapper
 public interface StudentMapper {
 
     /**
-     * 根据学生查询参数对象查询学生
-     * 
-     * @param studentQueryParam 学生查询参数对象
-     * @return 包含符合要求的 Student 对象 List
+     * query student list based on query params
+     * @param studentQueryParam query params
+     * @return student list
      */
-    public List<Student> list(StudentQueryParam studentQueryParam);
+    List<StudentVO> list(StudentQueryParam studentQueryParam);
 
     /**
-     * 根据 id 查询班级人数
-     * 
-     * @param id 班级 id
-     * @return 班级人数
+     * query student count
+     * @param id clazz(class) id
+     * @return
      */
     @Select("SELECT COUNT(*) FROM student WHERE clazz_id = #{id}")
     Integer countByClazzId(Integer id);
 
     /**
-     * 插入新学员
-     * 
-     * @param student
+     * insert new student
+     * @param student student entity
      */
     void insert(Student student);
 
+    /**
+     * query student by id
+     * @param id student id
+     * @return student vo
+     */
     @Select("SELECT " +
             "id, " +
             "name, " +
@@ -53,11 +59,11 @@ public interface StudentMapper {
             "update_time " +
             "FROM student " +
             "WHERE id = #{id}")
-    Student getStudentById(Integer id);
+    StudentVO getStudentById(Integer id);
 
     /**
-     * 根据 id 修改学生
-     * @param student 修改的 Student 对象
+     * update student info
+     * @param student student entity
      */
     void update(Student student);
 

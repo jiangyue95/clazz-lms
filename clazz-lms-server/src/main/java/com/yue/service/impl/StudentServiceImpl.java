@@ -4,8 +4,11 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.yue.mapper.StudentMapper;
 import com.yue.pojo.PageResult;
+import com.yue.pojo.dto.StudentSaveDTO;
+import com.yue.pojo.dto.StudentUpdateDTO;
 import com.yue.pojo.entity.Student;
 import com.yue.pojo.StudentQueryParam;
+import com.yue.pojo.vo.StudentVO;
 import com.yue.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,50 +23,75 @@ public class StudentServiceImpl implements StudentService {
     private StudentMapper studentMapper;
 
     /**
-     * 将 StudentQueryParam 对象传入 Mapper 层获取 PageResult 对象
-     * @param studentQueryParam 查询参数对象
-     * @return PageResult 对象
+     * Get student list based on query params
+     * @param studentQueryParam query params
+     * @return PageResult<StudentVO>
      */
     @Override
-    public PageResult<Student> page(StudentQueryParam studentQueryParam) {
-        // 1. 设置分页参数（PageHelper)
+    public PageResult<StudentVO> page(StudentQueryParam studentQueryParam) {
+        // 1. set pagination params using PageHelper
         PageHelper.startPage(studentQueryParam.getPage(), studentQueryParam.getPageSize());
-        // 2. 执行查询
-        List<Student> studentList = studentMapper.list(studentQueryParam);
-        // 3. 解析查询结果，并封装
-        Page<Student> p = (Page<Student>) studentList;
+        // 2. execute query
+        List<StudentVO> studentList = studentMapper.list(studentQueryParam);
+        // 3. parse query result and wrap it in PageResult
+        Page<StudentVO> p = (Page<StudentVO>) studentList;
         return new PageResult<>(p.getTotal(), p.getResult());
     }
 
     /**
-     * 将传入的 Student 对象保存到数据库
-     * @param student Student 对象
+     * Add new student
+     * @param studentSaveDTO a StudentSaveDTO object
      */
     @Override
-    public void add(Student student) {
-        student.setCreateTime(LocalDateTime.now());
-        student.setUpdateTime(LocalDateTime.now());
+    public void add(StudentSaveDTO studentSaveDTO) {
+        Student student = Student.builder()
+                .name(studentSaveDTO.getName())
+                .no(studentSaveDTO.getNo())
+                .gender(studentSaveDTO.getGender())
+                .phone(studentSaveDTO.getPhone())
+                .idCard(studentSaveDTO.getIdCard())
+                .address(studentSaveDTO.getAddress())
+                .degree(studentSaveDTO.getDegree())
+                .isCollege(studentSaveDTO.getIsCollege())
+                .graduationDate(studentSaveDTO.getGraduationDate())
+                .clazzId(studentSaveDTO.getClazzId())
+                .createTime(LocalDateTime.now())
+                .updateTime(LocalDateTime.now())
+                .build();
         studentMapper.insert(student);
     }
 
     /**
      * 将传入的 id 传给 mapper 层
      * @param id 传入的 id
-     * @return student 对象
+     * @return StudentVO 对象
      */
     @Override
-    public Student getStudentById(Integer id) {
-        Student student = studentMapper.getStudentById(id);
-        return student;
+    public StudentVO getStudentById(Integer id) {
+        StudentVO studentVO = studentMapper.getStudentById(id);
+        return studentVO;
     }
 
     /**
-     * 根据传入的 student 对象，查询并修改已有的 student 对象
-     * @param student student 对象
+     * modify student info
+     * @param studentUpdateDTO student info dto
      */
     @Override
-    public void modifyStudentInfo(Student student) {
-        student.setUpdateTime(LocalDateTime.now());
+    public void modifyStudentInfo(StudentUpdateDTO studentUpdateDTO) {
+        Student student = Student.builder()
+                .id(studentUpdateDTO.getId())
+                .name(studentUpdateDTO.getName())
+                .no(studentUpdateDTO.getNo())
+                .gender(studentUpdateDTO.getGender())
+                .phone(studentUpdateDTO.getPhone())
+                .idCard(studentUpdateDTO.getIdCard())
+                .address(studentUpdateDTO.getAddress())
+                .degree(studentUpdateDTO.getDegree())
+                .isCollege(studentUpdateDTO.getIsCollege())
+                .graduationDate(studentUpdateDTO.getGraduationDate())
+                .clazzId(studentUpdateDTO.getClazzId())
+                .updateTime(LocalDateTime.now())
+                .build();
         studentMapper.update(student);
     }
 

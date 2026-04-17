@@ -1,47 +1,52 @@
 package com.yue.service;
 
 import com.yue.pojo.PageResult;
-import com.yue.pojo.entity.Student;
+import com.yue.pojo.dto.StudentSaveDTO;
+import com.yue.pojo.dto.StudentUpdateDTO;
 import com.yue.pojo.StudentQueryParam;
+import com.yue.pojo.vo.StudentVO;
 
+/**
+ * StudentService interface
+ */
 public interface StudentService {
 
     /**
-     * 根据查询参数获取 Student 列表
-     * @param studentQueryParam 查询参数对象
-     * @return PageResult 对象
+     * Get student list based on query params
+     * @param studentQueryParam query params
+     * @return PageResult<StudentVO>
      */
-    PageResult<Student> page(StudentQueryParam studentQueryParam);
+    PageResult<StudentVO> page(StudentQueryParam studentQueryParam);
 
     /**
-     * 增加 student
-     * @param student Student 对象
+     * Add new student
+     * @param studentSaveDTO a StudentSaveDTO object
      */
-    void add(Student student);
+    void add(StudentSaveDTO studentSaveDTO);
 
     /**
-     * 根据 id 查询 学生对象
-     * @param id 传入的 id
-     * @return 返回学生对象
+     * Get student by id
+     * @param id student id
+     * @return StudentVO object
      */
-    Student getStudentById(Integer id);
+    StudentVO getStudentById(Integer id);
 
     /**
-     * 根据传入的 student 对象传入 Mapper 层
-     * @param student student 对象
+     * modify student info
+     * @param studentUpdateDTO student info dto
      */
-    void modifyStudentInfo(Student student);
+    void modifyStudentInfo(StudentUpdateDTO studentUpdateDTO);
 
     /**
-     * 根据传入的 id 删除 student
-     * @param id 删除的 id
+     * delete student by id
+     * @param id student id to delete
      */
     void delete(Integer id);
 
     /**
-     * 根据传入的 id 修改 student 的违规分
-     * @param id 删除的 id
-     * @param score 违规分
+     * modify student violation score
+     * @param id student id
+     * @param score violation score to modify
      */
     void modifyViolationScore(Integer id, Integer score);
 }
