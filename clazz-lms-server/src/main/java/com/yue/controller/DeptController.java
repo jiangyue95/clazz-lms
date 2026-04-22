@@ -6,8 +6,8 @@ import com.yue.pojo.dto.DeptUpdateDTO;
 import com.yue.pojo.entity.Dept;
 import com.yue.pojo.Result;
 import com.yue.service.DeptService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,10 +19,10 @@ import java.util.List;
 @Slf4j // log annotation
 @RequestMapping("/depts") // request mapping annotation: /depts
 @RestController // rest controller annotation
+@RequiredArgsConstructor
 public class DeptController {
 
-    @Autowired
-    private DeptService deptService;
+    private final DeptService deptService;
 
     /**
      * query all department info

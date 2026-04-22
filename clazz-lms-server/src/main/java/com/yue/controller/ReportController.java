@@ -6,8 +6,8 @@ import com.yue.pojo.vo.EmpJobOptionVO;
 import com.yue.pojo.vo.StudentDegreeVO;
 import com.yue.pojo.Result;
 import com.yue.service.ReportService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,12 +19,12 @@ import java.util.List;
  * Provide report statistics data
  */
 @Slf4j
-@RequestMapping("/report")
+@RequiredArgsConstructor
 @RestController
+@RequestMapping("/report")
 public class ReportController {
 
-    @Autowired
-    private ReportService reportService;
+    private final ReportService reportService;
 
     /**
      * Get employee job data

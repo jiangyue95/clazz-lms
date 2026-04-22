@@ -8,8 +8,8 @@ import com.yue.pojo.PageResult;
 import com.yue.pojo.Result;
 import com.yue.pojo.vo.ClazzVO;
 import com.yue.service.ClazzService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,10 +20,10 @@ import java.util.List;
 @Slf4j
 @RequestMapping("/clazzs")
 @RestController
+@RequiredArgsConstructor
 public class ClazzController {
 
-    @Autowired
-    private ClazzService clazzService;
+    private final ClazzService clazzService;
 
     /**
      * Pagination query clazz list

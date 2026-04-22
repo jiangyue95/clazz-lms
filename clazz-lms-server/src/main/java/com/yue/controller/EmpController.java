@@ -4,32 +4,27 @@ import com.yue.anno.Log;
 import com.yue.pojo.dto.EmpListQueryDTO;
 import com.yue.pojo.dto.EmpSaveDTO;
 import com.yue.pojo.dto.EmpUpdateDTO;
-import com.yue.pojo.entity.Emp;
-import com.yue.pojo.EmpQueryParam;
 import com.yue.pojo.PageResult;
 import com.yue.pojo.Result;
 import com.yue.pojo.vo.EmpInfoVO;
 import com.yue.pojo.vo.EmpVO;
 import com.yue.service.EmpService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.resource.ResourceUrlProvider;
 
 import java.util.List;
 
 /**
- * 员工管理的 Controller
+ * Employee management controller
  */
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/emps")
 public class EmpController {
 
-    @Autowired
-    private EmpService empService;
-    @Autowired
-    private ResourceUrlProvider resourceUrlProvider;
+    private final EmpService empService;
 
     /**
      * Based on the query parameters, return a list of employee.

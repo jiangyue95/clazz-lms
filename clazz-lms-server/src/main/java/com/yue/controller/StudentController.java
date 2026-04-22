@@ -8,8 +8,8 @@ import com.yue.pojo.dto.StudentUpdateDTO;
 import com.yue.pojo.StudentQueryParam;
 import com.yue.pojo.vo.StudentVO;
 import com.yue.service.StudentService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -18,10 +18,10 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RequestMapping("/students")
 @RestController
+@RequiredArgsConstructor
 public class StudentController {
 
-    @Autowired
-    private StudentService studentService;
+    private final StudentService studentService;
 
     /**
      * query student list based on query params
@@ -55,7 +55,7 @@ public class StudentController {
      */
     @GetMapping("/{id}")
     public Result get(@PathVariable Integer id) {
-        log.info("查询学员：{}", id);
+        log.info("Query student by id：{}", id);
         StudentVO studentVO = studentService.getStudentById(id);
         return Result.success(studentVO);
     }
@@ -81,13 +81,13 @@ public class StudentController {
     @Log
     @DeleteMapping("/{id}")
     public Result delete(@PathVariable Integer id) {
-        log.info("删除学员：{}", id);
+        log.info("Delete student by id：{}", id);
         studentService.delete(id);
         return Result.success();
     }
 
     /**
-     * violation violation score
+     * violation score
      * @param id student id
      * @param score violation score object
      * @return violation result object

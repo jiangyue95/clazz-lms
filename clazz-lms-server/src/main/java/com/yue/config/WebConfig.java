@@ -20,6 +20,6 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(tokenInterceptor)
                 .addPathPatterns("/**") // Intercept all requests
-                .excludePathPatterns("/login"); // The login interface is not intercepted
+                .excludePathPatterns("/login", "/favicon.ico", "/doc.html", "/v3/api-docs/**", "/swagger-ui/**", "/webjars/**"); // The login interface is not intercepted
     }
 }

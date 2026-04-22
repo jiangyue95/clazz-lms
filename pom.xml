@@ -25,6 +25,7 @@
     </modules>
 
     <properties>
+        <spring-boot.version>3.5.13</spring-boot.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -35,6 +36,7 @@
         <lombok.version>1.18.42</lombok.version>
         <pagehelper.version>2.1.1</pagehelper.version>
         <mybatis.version>3.0.5</mybatis.version>
+        <knife4j.version>4.4.0</knife4j.version>
     </properties>
 
     <!-- Unified management of dependency versions -->
@@ -100,6 +102,19 @@
                 <artifactId>mybatis-spring-boot-starter-test</artifactId>
                 <version>${mybatis.version}</version>
                 <scope>test</scope>
+            </dependency>
+
+            <!-- Knife4j -->
+            <dependency>
+                <groupId>com.github.xiaoyminmin</groupId>
+                <artifactId>knife4j-spring-boot-starter</artifactId>
+                <version>${knife4j.version}</version>
+            </dependency>
+
+            <!-- Redis -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-data-redis</artifactId>
             </dependency>
         </dependencies>
     </dependencyManagement>

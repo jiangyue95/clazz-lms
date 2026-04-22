@@ -4,8 +4,8 @@ import com.yue.pojo.entity.OperateLog;
 import com.yue.pojo.PageResult;
 import com.yue.pojo.Result;
 import com.yue.service.LogService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,12 +14,12 @@ import org.springframework.web.bind.annotation.RestController;
  * Log controller
  */
 @Slf4j
-@RequestMapping("/log")
+@RequiredArgsConstructor
 @RestController
+@RequestMapping("/log")
 public class LogController {
 
-    @Autowired
-    private LogService logService;
+    private final LogService logService;
 
     /**
      * pagination query for log
