@@ -31,8 +31,8 @@ public class ClazzController {
      * @return result
      */
     @GetMapping
-    public Result page(ClazzQueryParam clazzQueryParam) {
-        log.info("班级分页查询： {}", clazzQueryParam);
+    public Result<PageResult<ClazzVO>> page(ClazzQueryParam clazzQueryParam) {
+        log.info("Query clazz(class) list by pagination: {}", clazzQueryParam);
         PageResult<ClazzVO> pageResult = clazzService.page(clazzQueryParam);
         return Result.success(pageResult);
     }
@@ -44,7 +44,7 @@ public class ClazzController {
      */
     @Log
     @PostMapping
-    public Result save(@RequestBody ClazzSaveDTO clazzSaveDTO) {
+    public Result<Void> save(@RequestBody ClazzSaveDTO clazzSaveDTO) {
         log.info("Add new clazz(class)：{}", clazzSaveDTO);
         clazzService.save(clazzSaveDTO);
         return Result.success();
@@ -56,8 +56,8 @@ public class ClazzController {
      * @return clazz vo
      */
     @GetMapping("/{id}")
-    public Result getClazzById(@PathVariable Integer id) {
-        log.info("查询班级：{}", id);
+    public Result<ClazzVO> getClazzById(@PathVariable Integer id) {
+        log.info("Query clazz(class) by id：{}", id);
         ClazzVO clazzVO =  clazzService.getClassById(id);
         return Result.success(clazzVO);
     }
@@ -69,7 +69,7 @@ public class ClazzController {
      */
     @Log
     @PutMapping()
-    public Result modifyClazz(@RequestBody ClazzUpdateDTO clazzUpdateDTO) {
+    public Result<Void> modifyClazz(@RequestBody ClazzUpdateDTO clazzUpdateDTO) {
         log.info("Update clazz(class) info：{}", clazzUpdateDTO);
         clazzService.modifyClazz(clazzUpdateDTO);
         return Result.success();
@@ -82,8 +82,8 @@ public class ClazzController {
      */
     @Log
     @DeleteMapping("/{id}")
-    public Result removeClazzById(@PathVariable Integer id){
-        log.info("Delete clazz(class)：{}", id);
+    public Result<Void> removeClazzById(@PathVariable Integer id){
+        log.info("Delete clazz(class) by id：{}", id);
         clazzService.deleteClazzById(id);
         return Result.success();
     }
@@ -93,8 +93,8 @@ public class ClazzController {
      * @return clazz(class) vo list
      */
     @GetMapping("/list")
-    public Result getAllClazzs() {
-        log.info("Query all clazz(class)");
+    public Result<List<ClazzVO>> getAllClazzs() {
+        log.info("Query all clazz(class) list");
         List<ClazzVO> clazzList = clazzService.getAllClazzs();
         return Result.success(clazzList);
     }

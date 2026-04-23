@@ -7,37 +7,39 @@ import lombok.NoArgsConstructor;
 
 /**
  * Result：generic response class
+ *
+ * @param <T> the type of the data
  */
-@AllArgsConstructor
 @Builder
 @Data
 @NoArgsConstructor
-public class Result {
+@AllArgsConstructor
+public class Result<T> {
 
     // Response Code: 1, success; 0, fail
     private Integer code;
     // tips message: success or fail
     private String msg;
     // data: the data of the response
-    private Object data;
+    private T data;
 
-    public static Result success() {
-        return Result.builder()
+    public static <T> Result<T> success() {
+        return Result.<T>builder()
                 .code(1)
                 .msg("success")
                 .build();
     }
 
-    public static Result success(Object object) {
-        return Result.builder()
+    public static <T> Result<T> success(T data) {
+        return Result.<T>builder()
                 .code(1)
                 .msg("success")
-                .data(object)
+                .data(data)
                 .build();
     }
 
-    public static Result error(String msg) {
-        return Result.builder()
+    public static <T> Result<T> error(String msg) {
+        return Result.<T>builder()
                 .code(0)
                 .msg(msg)
                 .build();
