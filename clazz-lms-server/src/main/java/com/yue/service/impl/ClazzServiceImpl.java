@@ -3,6 +3,7 @@ package com.yue.service.impl;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.yue.exception.BusinessRuleViolationException;
+import com.yue.exception.ResourceNotFoundException;
 import com.yue.mapper.ClazzMapper;
 import com.yue.mapper.StudentMapper;
 import com.yue.pojo.dto.ClazzSaveDTO;
@@ -93,6 +94,9 @@ public class ClazzServiceImpl implements ClazzService {
     @Override
     public ClazzVO getClassById(Integer id) {
         ClazzVO clazzVO = clazzMapper.selectById(id);
+        if (clazzVO == null) {
+            throw new ResourceNotFoundException("Clazz(Class) with id " + id + " not found");
+        }
         return clazzVO;
     }
 
