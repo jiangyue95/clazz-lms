@@ -30,6 +30,7 @@ public interface DeptMapper {
      * @param dept new department
      */
     @Insert("insert into dept (name, create_time, update_time) values (#{name}, #{createTime}, #{updateTime})")
+    @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(Dept dept);
 
     /**
