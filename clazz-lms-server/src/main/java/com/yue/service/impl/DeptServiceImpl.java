@@ -1,12 +1,14 @@
 package com.yue.service.impl;
 
 import com.yue.exception.BusinessRuleViolationException;
+import com.yue.exception.ResourceNotFoundException;
 import com.yue.mapper.DeptMapper;
 import com.yue.pojo.dto.DeptSaveDTO;
 import com.yue.pojo.dto.DeptUpdateDTO;
 import com.yue.pojo.entity.Dept;
+import com.yue.pojo.vo.DeptVO;
 import com.yue.service.DeptService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,18 +18,21 @@ import java.util.List;
  * department service implementation
  */
 @Service
+@RequiredArgsConstructor
 public class DeptServiceImpl implements DeptService {
 
-    @Autowired
-    private DeptMapper deptMapper;
+    private final DeptMapper deptMapper;
 
     /**
      * Query all departments
      * @return all departments list
      */
     @Override
-    public List<Dept> findAll() {
-        return deptMapper.findAll();
+    public List<DeptVO> findAll() {
+        return deptMapper.findAll()
+                .stream()
+                .map(this::toVO)
+                .toList();
     }
 
     /**
@@ -36,13 +41,21 @@ public class DeptServiceImpl implements DeptService {
      */
     @Override
     public void deleteById(Integer id) {
-        // 1. check if the department has employees
-        Integer employeeCount = deptMapper.countByDeptId(id);
-        if (employeeCount > 0) {
-            throw new BusinessRuleViolationException("Cannot delete department: it still has employees assigned");
+        // Check if the department exists
+        Dept existing = deptMapper.getById(id);
+        if (existing == null) {
+            throw new ResourceNotFoundException("Cannot find department with id: " + id);
         }
 
-        // 2. delete the department
+        // Check if the department has employees
+        Integer employeeCount = deptMapper.countByDeptId(id);
+        if (employeeCount > 0) {
+            throw new BusinessRuleViolationException(
+                    "Cannot delete department: it still has " + employeeCount + " employees assigned"
+            );
+        }
+
+        // Delete the department
         deptMapper.deleteById(id);
     }
 
@@ -51,16 +64,18 @@ public class DeptServiceImpl implements DeptService {
      * @param deptSaveDTO new department DTO
      */
     @Override
-    public void add(DeptSaveDTO deptSaveDTO) {
+    public DeptVO add(DeptSaveDTO deptSaveDTO) {
         // 1. add basic attributes: createTime, updateTime
+        LocalDateTime now = LocalDateTime.now();
         Dept dept = Dept.builder()
                 .name(deptSaveDTO.getName())
-                .createTime(LocalDateTime.now())
-                .updateTime(LocalDateTime.now())
+                .createTime(now)
+                .updateTime(now)
                 .build();
 
         // 2. Call insert Mapper method
         deptMapper.insert(dept);
+        return toVO(dept);
     }
 
     /**
@@ -69,8 +84,12 @@ public class DeptServiceImpl implements DeptService {
      * @return department info
      */
     @Override
-    public Dept getById(Integer id) {
-        return deptMapper.getById(id);
+    public DeptVO getById(Integer id) {
+        Dept dept =  deptMapper.getById(id);
+        if (dept == null) {
+            throw new ResourceNotFoundException("Cannot find department with id: " + id);
+        }
+        return toVO(dept);
     }
 
     /**
@@ -78,14 +97,39 @@ public class DeptServiceImpl implements DeptService {
      * @param deptUpdateDTO department info DTO
      */
     @Override
-    public void update(DeptUpdateDTO deptUpdateDTO) {
-        // add basic attributes: updateTime
+    public DeptVO update(Integer id, DeptUpdateDTO deptUpdateDTO) {
+        // Check if the department exists, otherwise throws the 404
+        Dept existing = deptMapper.getById(id);
+        if (existing == null) {
+            throw new ResourceNotFoundException("Cannot find department with id: " + id);
+        }
+
+        // Add basic attributes: updateTime
         Dept dept = Dept.builder()
-                .id(deptUpdateDTO.getId())
+                .id(id)
                 .name(deptUpdateDTO.getName())
                 .updateTime(LocalDateTime.now())
                 .build();
-        // call update Mapper method
+
+        // Call update Mapper method
         deptMapper.update(dept);
+
+        // Return the updated complete data
+        return getById(id);
+    }
+
+    /**
+     * Entity -> VO vonversion.
+     * Centralized here so all callers produce consistent VOs.
+     * @param dept a Dept object
+     * @return a DeptVO object
+     */
+    private DeptVO toVO(Dept dept) {
+        return DeptVO.builder()
+                .id(dept.getId())
+                .name(dept.getName())
+                .createTime(dept.getCreateTime())
+                .updateTime(dept.getUpdateTime())
+                .build();
     }
 }

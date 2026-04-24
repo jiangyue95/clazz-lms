@@ -2,7 +2,7 @@ package com.yue.service;
 
 import com.yue.pojo.dto.DeptSaveDTO;
 import com.yue.pojo.dto.DeptUpdateDTO;
-import com.yue.pojo.entity.Dept;
+import com.yue.pojo.vo.DeptVO;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ public interface DeptService {
      * Query all departments
      * @return all departments list
      */
-    List<Dept> findAll();
+    List<DeptVO> findAll();
 
     /**
      * Delete department by id
@@ -26,18 +26,18 @@ public interface DeptService {
      * Add new department
      * @param deptSaveDTO new department DTO
      */
-    void add(DeptSaveDTO deptSaveDTO);
+    DeptVO add(DeptSaveDTO deptSaveDTO);
 
     /**
      * Query department info by id
      * @param id department ID
      * @return department info
      */
-    Dept getById(Integer id);
+    DeptVO getById(Integer id);
 
     /**
      * Update department info
      * @param deptUpdateDTO department info DTO
      */
-    void update(DeptUpdateDTO deptUpdateDTO);
+    DeptVO update(Integer id, DeptUpdateDTO deptUpdateDTO);
 }
