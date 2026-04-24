@@ -42,7 +42,6 @@ out/
 # other runtime data
 pids/
 data/
-/src/
 
 # Claude
 .claude/
