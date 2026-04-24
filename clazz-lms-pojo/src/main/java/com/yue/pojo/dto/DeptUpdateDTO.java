@@ -13,6 +13,5 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class DeptUpdateDTO {
-    private Integer id;
     private String name;
 }
