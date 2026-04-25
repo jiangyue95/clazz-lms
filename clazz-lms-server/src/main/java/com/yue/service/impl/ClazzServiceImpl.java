@@ -2,7 +2,7 @@ package com.yue.service.impl;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
-import com.yue.exception.ClazzHasStudentException;
+import com.yue.exception.BusinessRuleViolationException;
 import com.yue.mapper.ClazzMapper;
 import com.yue.mapper.StudentMapper;
 import com.yue.pojo.dto.ClazzSaveDTO;
@@ -118,10 +118,10 @@ public class ClazzServiceImpl implements ClazzService {
     @Override
     @Transactional
     public void deleteClazzById(Integer id) {
-        // 查询班级人数
+        // Query the student count of clazz(class)
         Integer studentCount = studentMapper.countByClazzId(id);
         if (studentCount > 0) {
-            throw new ClazzHasStudentException("对不起, 该班级下有学生, 不能直接删除");
+            throw new BusinessRuleViolationException("Cannot delete clazz: it still has students enrolled");
         }
         clazzMapper.deleteClazzById(id);
     }

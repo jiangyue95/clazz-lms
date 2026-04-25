@@ -1,6 +1,6 @@
 package com.yue.service.impl;
 
-import com.yue.exception.DeptHasEmpException;
+import com.yue.exception.BusinessRuleViolationException;
 import com.yue.mapper.DeptMapper;
 import com.yue.pojo.dto.DeptSaveDTO;
 import com.yue.pojo.dto.DeptUpdateDTO;
@@ -37,9 +37,9 @@ public class DeptServiceImpl implements DeptService {
     @Override
     public void deleteById(Integer id) {
         // 1. check if the department has employees
-        Integer studentCount = deptMapper.countByDeptId(id);
-        if (studentCount > 0) {
-            throw new DeptHasEmpException("Sorry, please delete the employees first.");
+        Integer employeeCount = deptMapper.countByDeptId(id);
+        if (employeeCount > 0) {
+            throw new BusinessRuleViolationException("Cannot delete department: it still has employees assigned");
         }
 
         // 2. delete the department
