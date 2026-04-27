@@ -5,6 +5,7 @@ import com.yue.pojo.dto.DeptSaveDTO;
 import com.yue.pojo.dto.DeptUpdateDTO;
 import com.yue.pojo.vo.DeptVO;
 import com.yue.service.DeptService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -62,7 +63,7 @@ public class DeptController {
      */
     @Log
     @PostMapping
-    public ResponseEntity<DeptVO> add(@RequestBody DeptSaveDTO deptSaveDTO) {
+    public ResponseEntity<DeptVO> add(@Valid @RequestBody DeptSaveDTO deptSaveDTO) {
         log.info("Add new department：{}", deptSaveDTO);
         DeptVO created  = deptService.add(deptSaveDTO);
 
@@ -86,7 +87,7 @@ public class DeptController {
     @PutMapping("/{id}")
     public DeptVO update(
             @PathVariable Integer id,
-            @RequestBody DeptUpdateDTO deptUpdateDTO) {
+            @Valid @RequestBody DeptUpdateDTO deptUpdateDTO) {
         log.info("Update department id={}, payload={}", id, deptUpdateDTO);
         return deptService.update(id, deptUpdateDTO);
     }
