@@ -6,9 +6,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 /**
  * Global exception handler class
@@ -170,5 +172,38 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponseDTO);
+    }
+
+    /**
+     * Handles validation failures triggered by {@code @Valid} on controller method parameters.
+     * <p>
+     * Spring throws {@link MethodArgumentNotValidException} when one or more fields
+     * fail Bean Validation constraints. This handler aggregates all field errors into
+     * a single human-readable message and returns HTTP 400 Bad Request - the
+     * appropriate status for client-side input errors.
+     *
+     * @param ex the exception thrown by the framwork
+     * @param request the current HTTP request (used to populate the path field)
+     * @return a 400 Bad Request response with field-level error details
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponseDTO> handleMethodArgumentNotValidException(
+            MethodArgumentNotValidException ex,
+            HttpServletRequest request){
+
+        String errorMessage = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(fieldError -> fieldError.getField() + ":" + fieldError.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+
+        ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(
+                "VALIDATION_FAILED",
+                errorMessage,
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponseDTO);
     }
 }
