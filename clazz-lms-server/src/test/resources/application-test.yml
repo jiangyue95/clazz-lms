@@ -1,0 +1,32 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;NON_KEYWORDS=USER
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  sql:
+    init:
+      mode: always
+      schema-locations: "classpath:schema-test.sql"
+      data-locations: "classpath:data-test.sql"
+      continue-on-error: false
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    com.yue: DEBUG
+    org.springframework.test: INFO
+    org.springframework.web: INFO
+    # 加这些 - 暴露 SQL 错误细节
+    org.springframework.jdbc: DEBUG
+    org.springframework.jdbc.core: TRACE
+    org.mybatis: TRACE
+    com.zaxxer.hikari: INFO
