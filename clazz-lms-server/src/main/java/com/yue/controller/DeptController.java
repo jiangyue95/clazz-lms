@@ -38,9 +38,10 @@ public class DeptController {
      * @return 200 OK with the list of departments (possibly empty)
      */
     @GetMapping
-    public List<DeptVO> list() {
+    public ResponseEntity<List<DeptVO>> list() {
         log.info("Query all departments");
-        return deptService.findAll();
+        List<DeptVO> depts = deptService.findAll();
+        return ResponseEntity.ok(depts);
     }
 
     /**
@@ -50,9 +51,10 @@ public class DeptController {
      * @return 200 OK with department info; 404 if not found
      */
     @GetMapping("/{id}")
-    public DeptVO getInfo(@PathVariable Integer id) {
+    public ResponseEntity<DeptVO> getInfo(@PathVariable Integer id) {
         log.info("Query department info by id：{}", id);
-        return deptService.getById(id);
+        DeptVO dept = deptService.getById(id);
+        return ResponseEntity.ok(dept);
     }
 
     /**
@@ -80,16 +82,17 @@ public class DeptController {
      * Update an existing department.
      *
      * @param id department ID (from URL, authoritative)
-     * @param deptUpdateDTO department upload payload
+     * @param deptUpdateDTO department update payload
      * @return 200 OK with the updated department; 404 if not found
      */
     @Log
     @PutMapping("/{id}")
-    public DeptVO update(
+    public ResponseEntity<DeptVO> update(
             @PathVariable Integer id,
             @Valid @RequestBody DeptUpdateDTO deptUpdateDTO) {
         log.info("Update department id={}, payload={}", id, deptUpdateDTO);
-        return deptService.update(id, deptUpdateDTO);
+        DeptVO updated  = deptService.update(id, deptUpdateDTO);
+        return ResponseEntity.ok(updated);
     }
 
     /**
@@ -97,14 +100,15 @@ public class DeptController {
      *
      * @param id department id
      * <p>
-     *           204 No Content on success
-     *           404 if not found
-     *           409 if the department still has employees
+     * 204 No Content on success
+     * 404 if not found
+     * 409 if the department still has employees
      */
     @Log
     @DeleteMapping("/{id}")
-    public void deleteDeptById(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteDeptById(@PathVariable Integer id) {
         log.info("Delete department by id：{}", id);
         deptService.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }
