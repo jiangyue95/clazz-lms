@@ -34,14 +34,14 @@ public interface EmpMapper {
      * Batch delete employee basic information by a list of id
      * @param ids a list of employee id
      */
-    void deleteByIds(List<Integer> ids);
+    void deleteByIds(List<Long> ids);
 
     /**
      * Get employee basic information by id
      * @param id employee id
      * @return an employee entity
      */
-    Emp getById(Integer id);
+    Emp getById(Long id);
 
     /**
      * Update employee basic information by id

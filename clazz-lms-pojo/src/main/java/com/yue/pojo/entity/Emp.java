@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 public class Emp {
 
     //ID, primary key
-    private Integer id;
+    private Long id;
 
     // username
     private String username;

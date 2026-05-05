@@ -14,7 +14,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 public class EmpUpdateDTO {
-    private Integer id;
+    private Long id;
     private String username;
     private String name;
     private Integer gender;

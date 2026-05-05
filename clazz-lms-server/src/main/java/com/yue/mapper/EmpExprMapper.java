@@ -18,12 +18,12 @@ public interface EmpExprMapper {
      * Batch delete employee work experience
      * @param empIds a list of employee id
      */
-    void deleteByEmpIds(List<Integer> empIds);
+    void deleteByEmpIds(List<Long> empIds);
 
     /**
      * Get employee work experience by employee id
      * @param empId employee id
      * @return a list of employee work experience
      */
-    List<EmpExpr> selectByEmpId(Integer empId);
+    List<EmpExpr> selectByEmpId(Long empId);
 }

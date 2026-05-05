@@ -30,7 +30,7 @@ public interface EmpService {
      * Delete employee by a list of id
      * @param ids a list of employee id
      */
-    void delete(List<Integer> ids);
+    void delete(List<Long> ids);
 
     /**
      * Get employee information by id
@@ -38,7 +38,7 @@ public interface EmpService {
      * @param id employee id
      * @return an employee information VO
      */
-    EmpInfoVO getInfo(Integer id);
+    EmpInfoVO getInfo(Long id);
 
     /**
      * Update employee information
@@ -58,4 +58,18 @@ public interface EmpService {
      * @return an employee login VO
      */
     EmpLoginVO login(EmpLoginDTO dto);
+
+    /**
+     * Get employee by id
+     * @param id employee id
+     * @return an employee entity
+     */
+    Emp getById(Long id);
+
+    /**
+     * Authenticate employee
+     * @param dto employee login DTO contains username and password
+     * @return an employee entity
+     */
+    Emp authenticate(EmpLoginDTO dto);
 }

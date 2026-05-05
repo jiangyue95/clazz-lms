@@ -5,16 +5,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * employee login view object
- */
-@AllArgsConstructor
-@Builder
 @Data
+@Builder
 @NoArgsConstructor
-public class EmpLoginVO {
+@AllArgsConstructor
+public class LoginVO {
     private Long id;
     private String username;
     private String name;
-    private String token;
+    private String accessToken;
+    private Long accessTokenExpiresIn;
 }

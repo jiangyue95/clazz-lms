@@ -59,7 +59,7 @@ public class EmpController {
      */
     @Log
     @DeleteMapping
-    public Result delete(@RequestParam List<Integer> ids) {
+    public Result delete(@RequestParam List<Long> ids) {
         log.info("Delete parameter：{}", ids);
         empService.delete(ids);
         return Result.success();
@@ -71,7 +71,7 @@ public class EmpController {
      * @return employee info
      */
     @GetMapping("/{id}")
-    public Result getInfo(@PathVariable Integer id) {
+    public Result getInfo(@PathVariable Long id) {
         log.info("Get employee info by id：{}", id);
         EmpInfoVO empInfoVO = empService.getInfo(id);
         return Result.success(empInfoVO);

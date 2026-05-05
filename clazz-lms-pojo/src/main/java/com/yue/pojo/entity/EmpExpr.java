@@ -18,7 +18,7 @@ public class EmpExpr {
     private Integer id;
 
     // employee id
-    private Integer empId;
+    private Long empId;
 
     // begin date
     private LocalDate begin;

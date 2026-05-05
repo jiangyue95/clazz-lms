@@ -109,7 +109,7 @@ public class EmpServiceImpl implements EmpService {
      */
     @Transactional(rollbackFor = {Exception.class})
     @Override
-    public void delete(List<Integer> ids) {
+    public void delete(List<Long> ids) {
         // 1. Batch delete employee basic information
         empMapper.deleteByIds(ids);
 
@@ -124,7 +124,7 @@ public class EmpServiceImpl implements EmpService {
      * @return an employee information VO
      */
     @Override
-    public EmpInfoVO getInfo(Integer id) {
+    public EmpInfoVO getInfo(Long id) {
         Emp emp = empMapper.getById(id);
         if (emp == null) {
             return null;
@@ -225,5 +225,33 @@ public class EmpServiceImpl implements EmpService {
                 .name(emp.getName())
                 .token(token)
                 .build();
+    }
+
+    /**
+     * Get employee by id
+     * @param id employee id
+     * @return an Emp entity, or null if employee not found
+     */
+    @Override
+    public Emp getById(Long id) {
+        Emp emp = empMapper.getById(id);
+        if (emp != null) {
+            return emp;
+        }
+        return null;
+    }
+
+    /**
+     * Authenticate employee by username and password
+     * @param dto login request body
+     * @return employee login vo, or null if login failed
+     */
+    @Override
+    public Emp authenticate(EmpLoginDTO dto) {
+        Emp emp = empMapper.getByUsername(dto.getUsername());
+        if (emp == null || !emp.getPassword().equals(dto.getPassword())) {
+            return null;
+        }
+        return emp;
     }
 }
