@@ -16,9 +16,8 @@ import java.util.Map;
 /**
  * JWT generation and parsing service.
  *
- * <p>Replaces the static {@code JWTUtils} utility class. As a Spring-managed bean,
- * it receives configuration via {@link JwtConfigProperties} (instead of hardcoded
- * constants), making the secret externalizable per environment.
+ * <p>As a Spring-managed bean,it receives configuration via {@link JwtConfigProperties}
+ * (instead of hardcoded constants), making the secret externalizable per environment.
  *
  * <p>The signing key is derived once at startup via {@link #initKey()} to avoid
  * repeating the conversion on every request.
