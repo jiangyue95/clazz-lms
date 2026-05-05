@@ -13,7 +13,7 @@ import com.yue.pojo.vo.EmpLoginVO;
 import com.yue.pojo.vo.EmpVO;
 import com.yue.service.EmpLogService;
 import com.yue.service.EmpService;
-import com.yue.utils.JWTUtils;
+import com.yue.security.JwtService;
 import com.yue.pojo.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +40,9 @@ public class EmpServiceImpl implements EmpService {
     private EmpLogService empLogService;
     @Autowired
     private ResourcePatternResolver resourcePatternResolver;
+
+    @Autowired
+    private JwtService jwtService;
 
     /**
      * Page query employee list
@@ -216,7 +219,7 @@ public class EmpServiceImpl implements EmpService {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", emp.getId());
         claims.put("username", emp.getUsername());
-        String token = JWTUtils.generateJWTToken(claims);
+        String token = jwtService.generateToken(claims);
 
         // 4. construct and return vo
         return EmpLoginVO.builder()
