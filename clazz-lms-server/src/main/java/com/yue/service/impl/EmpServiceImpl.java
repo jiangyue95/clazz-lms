@@ -2,9 +2,13 @@ package com.yue.service.impl;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.yue.exception.InvalidCredentialsException;
 import com.yue.mapper.EmpExprMapper;
 import com.yue.mapper.EmpMapper;
-import com.yue.pojo.dto.*;
+import com.yue.pojo.dto.EmpListQueryDTO;
+import com.yue.pojo.dto.EmpLoginDTO;
+import com.yue.pojo.dto.EmpSaveDTO;
+import com.yue.pojo.dto.EmpUpdateDTO;
 import com.yue.pojo.entity.Emp;
 import com.yue.pojo.entity.EmpExpr;
 import com.yue.pojo.entity.EmpLog;
@@ -202,17 +206,27 @@ public class EmpServiceImpl implements EmpService {
 
     /**
      * Login employee by username and password
+     *
      * @param dto login request body
-     * @return employee login vo, or null if login failed
+     * @return employee login vo with JWT token
+     * @throws InvalidCredentialsException if username doesn't exist or password is wrong
      */
     @Override
     public EmpLoginVO login(EmpLoginDTO dto) {
         // 1. select employee by username
         Emp emp = empMapper.getByUsername(dto.getUsername());
 
-        // 2. check if employee exists or password is correct
-        if (emp == null || !emp.getPassword().equals(dto.getPassword())) {
-            return null;
+        // 2. check credentials
+        //    Note: log the precise reason internally for debugging,
+        //    but expose only a vague message externally to prevent
+        //    user enumeration attacks.
+        if (emp == null) {
+            log.warn("Login failed: username not found: {}", dto.getUsername());
+            throw new InvalidCredentialsException("Invalid username or password");
+        }
+        if (!emp.getPassword().equals(dto.getPassword())) {
+            log.warn("Login failed: incorrect password for username: {}", dto.getUsername());
+            throw new InvalidCredentialsException("Invalid username or password");
         }
 
         // 3. generate JWT token
