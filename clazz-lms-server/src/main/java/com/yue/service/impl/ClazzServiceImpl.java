@@ -72,7 +72,7 @@ public class ClazzServiceImpl implements ClazzService {
      * @param clazzSaveDTO clazz save dto
      */
     @Override
-    public void save(ClazzSaveDTO clazzSaveDTO) {
+    public ClazzVO save(ClazzSaveDTO clazzSaveDTO) {
         Clazz clazz = Clazz.builder()
                 .name(clazzSaveDTO.getName())
                 .room(clazzSaveDTO.getRoom())
@@ -84,6 +84,9 @@ public class ClazzServiceImpl implements ClazzService {
                 .updateTime(LocalDateTime.now())
                 .build();
         clazzMapper.insert(clazz);
+
+        // After insert, clazz.id is populated thanks to @Options(useGeneratedKeys = true)
+        return clazzMapper.selectById(clazz.getId());
     }
 
     /**
@@ -105,9 +108,9 @@ public class ClazzServiceImpl implements ClazzService {
      * @param clazzUpdateDTO clazz update dto
      */
     @Override
-    public void modifyClazz(ClazzUpdateDTO clazzUpdateDTO) {
+    public ClazzVO modifyClazz(Integer id, ClazzUpdateDTO clazzUpdateDTO) {
         Clazz clazz = Clazz.builder()
-                .id(clazzUpdateDTO.getId())
+                .id(id)
                 .name(clazzUpdateDTO.getName())
                 .room(clazzUpdateDTO.getRoom())
                 .beginDate(clazzUpdateDTO.getBeginDate())
@@ -117,6 +120,7 @@ public class ClazzServiceImpl implements ClazzService {
                 .updateTime(LocalDateTime.now())
                 .build();
         clazzMapper.modifyClazz(clazz);
+        return clazzMapper.selectById(id);
     }
 
     @Override

@@ -71,7 +71,7 @@ public class ClazzController {
     @PutMapping()
     public Result<Void> modifyClazz(@RequestBody ClazzUpdateDTO clazzUpdateDTO) {
         log.info("Update clazz(class) info：{}", clazzUpdateDTO);
-        clazzService.modifyClazz(clazzUpdateDTO);
+        clazzService.modifyClazz(clazzUpdateDTO.getId(), clazzUpdateDTO);
         return Result.success();
     }
 

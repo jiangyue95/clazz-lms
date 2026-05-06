@@ -2,7 +2,6 @@ package com.yue.service;
 
 import com.yue.pojo.dto.ClazzSaveDTO;
 import com.yue.pojo.dto.ClazzUpdateDTO;
-import com.yue.pojo.entity.Clazz;
 import com.yue.pojo.ClazzQueryParam;
 import com.yue.pojo.PageResult;
 import com.yue.pojo.vo.ClazzVO;
@@ -17,23 +16,28 @@ public interface ClazzService {
     PageResult<ClazzVO> page(ClazzQueryParam clazzQueryParam);
 
     /**
-     * Add new class to database
+     * Add new clazz(class) to database
      * @param clazzSaveDTO clazz save dto
+     * @return the created clazz with its generated id
      */
-    void save(ClazzSaveDTO clazzSaveDTO);
+    ClazzVO save(ClazzSaveDTO clazzSaveDTO);
 
     /**
-     * query clazz by id
+     * Query clazz(class) by id.
+     *
      * @param id clazz id
      * @return clazz vo object
      */
     ClazzVO getClassById(Integer id);
 
     /**
-     * modify clazz by id and update dto
-     * @param clazzUpdateDTO clazz update dto
+     * Modify clazz(class) identified by URL path id.
+     *
+     * @param id clazz id (from URL, authoritative)
+     * @param clazzUpdateDTO update payload
+     * @return the updated clazz
      */
-    void modifyClazz(ClazzUpdateDTO clazzUpdateDTO);
+    ClazzVO modifyClazz(Integer id, ClazzUpdateDTO clazzUpdateDTO);
 
     /**
      * delete clazz by id
