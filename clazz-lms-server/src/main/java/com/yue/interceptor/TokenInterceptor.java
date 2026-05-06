@@ -1,10 +1,12 @@
 package com.yue.interceptor;
 
+import com.yue.security.JwtConfigProperties;
+import com.yue.security.JwtService;
 import com.yue.utils.BaseContext;
-import com.yue.utils.JWTUtils;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -15,7 +17,11 @@ import org.springframework.web.servlet.HandlerInterceptor;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class TokenInterceptor implements HandlerInterceptor {
+
+    private final JwtService jwtService;
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         // 1. get the JWT Token in the request header
@@ -29,10 +35,10 @@ public class TokenInterceptor implements HandlerInterceptor {
             return  false;
         }
 
-        // 3. if the token is not empty, call the parseJWTToken method in the JWTUtils class to parse the token.
+        // 3. if the token is not empty, parse it via JwtService
         // if the token is invalid, return an error message (response 401 status code)
         try {
-            Claims claims =JWTUtils.parseJWTToken(token);
+            Claims claims = jwtService.parseToken(token);
             BaseContext.setCurrentId((Integer) claims.get("id"));
             log.info("Current user empId: {}", BaseContext.getCurrentId());
         } catch (Exception e) {
