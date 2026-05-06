@@ -21,13 +21,8 @@ public class LoginController {
 
     @PostMapping
     public Result login(@RequestBody EmpLoginDTO dto) {
-        log.info("Employee login: {}", dto.getUsername());
+        log.info("Employee login attempt: {}", dto.getUsername());
         EmpLoginVO vo = empService.login(dto);
-
-        if (vo == null) {
-            return Result.error("Wrong username or password");
-        }
-
         return Result.success(vo);
     }
 }
