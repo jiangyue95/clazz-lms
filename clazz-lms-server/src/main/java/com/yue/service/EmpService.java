@@ -4,7 +4,6 @@ import com.yue.pojo.dto.EmpListQueryDTO;
 import com.yue.pojo.dto.EmpLoginDTO;
 import com.yue.pojo.dto.EmpSaveDTO;
 import com.yue.pojo.dto.EmpUpdateDTO;
-import com.yue.pojo.entity.Emp;
 import com.yue.pojo.PageResult;
 import com.yue.pojo.vo.EmpInfoVO;
 import com.yue.pojo.vo.EmpLoginVO;
@@ -21,10 +20,12 @@ public interface EmpService {
     PageResult<EmpVO> page(EmpListQueryDTO dto);
 
     /**
-     * Save new employee
+     * Save a new employee.
+     *
      * @param empSaveDTO employee save DTO contains employee information and its experience list
+     * @return the created employee with its generated id
      */
-    void save(EmpSaveDTO empSaveDTO) throws Exception;
+    EmpInfoVO save(EmpSaveDTO empSaveDTO) throws Exception;
 
     /**
      * Delete employee by a list of id
@@ -41,10 +42,13 @@ public interface EmpService {
     EmpInfoVO getInfo(Integer id);
 
     /**
-     * Update employee information
-     * @param empUpdateDTO employee update DTO contains employee information and its experience list
+     * Update the employee identified by the given id.
+     *
+     * @param id employee id (from URL, authoritative)
+     * @param empUpdateDTO update payload
+     * @return the updated employee
      */
-    void update(EmpUpdateDTO empUpdateDTO);
+    EmpInfoVO update(Integer id, EmpUpdateDTO empUpdateDTO);
 
     /**
      * query all employee basic information

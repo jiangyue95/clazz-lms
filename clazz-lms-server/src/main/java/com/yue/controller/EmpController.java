@@ -86,7 +86,7 @@ public class EmpController {
     @PutMapping
     public Result update(@RequestBody EmpUpdateDTO empUpdateDTO) {
         log.info("Update employee info：{}", empUpdateDTO);
-        empService.update(empUpdateDTO);
+        empService.update(empUpdateDTO.getId(), empUpdateDTO);
         return Result.success();
     }
 

@@ -74,23 +74,24 @@ public class EmpServiceImpl implements EmpService {
      */
     @Transactional(rollbackFor = {Exception.class})
     @Override
-    public void save(EmpSaveDTO empSaveDTO) throws Exception {
+    public EmpInfoVO save(EmpSaveDTO empSaveDTO) throws Exception {
+        Emp emp = Emp.builder()
+                .username(empSaveDTO.getUsername())
+                .name(empSaveDTO.getName())
+                .gender(empSaveDTO.getGender())
+                .job(empSaveDTO.getJob())
+                .entryDate(empSaveDTO.getEntryDate())
+                .deptId(empSaveDTO.getDeptId())
+                .phone(empSaveDTO.getPhone())
+                .salary(empSaveDTO.getSalary())
+                .image(empSaveDTO.getImage())
+                .createTime(LocalDateTime.now())
+                .updateTime(LocalDateTime.now())
+                .password("123456")
+                .build();
+
         try {
             // 1.Save employee information
-            Emp emp = Emp.builder()
-                    .username(empSaveDTO.getUsername())
-                    .name(empSaveDTO.getName())
-                    .gender(empSaveDTO.getGender())
-                    .job(empSaveDTO.getJob())
-                    .entryDate(empSaveDTO.getEntryDate())
-                    .deptId(empSaveDTO.getDeptId())
-                    .phone(empSaveDTO.getPhone())
-                    .salary(empSaveDTO.getSalary())
-                    .image(empSaveDTO.getImage())
-                    .createTime(LocalDateTime.now())
-                    .updateTime(LocalDateTime.now())
-                    .password("123456")
-                    .build();
             empMapper.insert(emp);
 
             // 2. save employee work experience
@@ -109,6 +110,9 @@ public class EmpServiceImpl implements EmpService {
                     .build();
             empLogService.insert(empLog);
         }
+
+        // 4. return the created employee
+        return getInfo(emp.getId());
     }
 
     /**
@@ -162,16 +166,16 @@ public class EmpServiceImpl implements EmpService {
      */
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void update(EmpUpdateDTO empUpdateDTO) {
-        // 1. check if the employee exists or not
-        Emp existingEmp = empMapper.getById(empUpdateDTO.getId());
+    public EmpInfoVO update(Integer id, EmpUpdateDTO empUpdateDTO) {
+        // 1. check if the employee exists; throw 404 if not
+        Emp existingEmp = empMapper.getById(id);
         if (existingEmp == null) {
-            throw new ResourceNotFoundException("Employee not found: " + empUpdateDTO.getId());
+            throw new ResourceNotFoundException("Employee not found: " + id);
         }
 
         // 2. update employee basic information
         Emp emp = Emp.builder()
-                .id(existingEmp.getId())
+                .id(id)
                 .username(empUpdateDTO.getUsername())
                 .name(empUpdateDTO.getName())
                 .gender(empUpdateDTO.getGender())
@@ -186,14 +190,17 @@ public class EmpServiceImpl implements EmpService {
         empMapper.updateById(emp);
 
         // 3. delete the old work experience
-        empExprMapper.deleteByEmpIds(Arrays.asList(emp.getId()));
+        empExprMapper.deleteByEmpIds(Arrays.asList(id));
 
         // 4. insert new work experience into database
         List<EmpExpr> exprList = empUpdateDTO.getExprList();
         if (!CollectionUtils.isEmpty(exprList)) {
-            exprList.forEach(empExpr -> empExpr.setEmpId(emp.getId()));
+            exprList.forEach(empExpr -> empExpr.setEmpId(id));
             empExprMapper.insertBatch(exprList);
         }
+
+        // 5. return the updated employee
+        return getInfo(id);
     }
 
     /**
