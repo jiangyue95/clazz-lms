@@ -5,14 +5,16 @@ import com.yue.pojo.dto.EmpListQueryDTO;
 import com.yue.pojo.dto.EmpSaveDTO;
 import com.yue.pojo.dto.EmpUpdateDTO;
 import com.yue.pojo.PageResult;
-import com.yue.pojo.Result;
 import com.yue.pojo.vo.EmpInfoVO;
 import com.yue.pojo.vo.EmpVO;
 import com.yue.service.EmpService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 /**
@@ -27,77 +29,91 @@ public class EmpController {
     private final EmpService empService;
 
     /**
-     * Based on the query parameters, return a list of employee.
+     * Pagination query of employee list.
+     *
      * @param empListQueryDTO query parameters
-     * @return a list of employee
+     * @return 200 OK with the paged result (possibly empty)
      */
     @GetMapping
-    public Result page(EmpListQueryDTO empListQueryDTO){
+    public ResponseEntity<PageResult<EmpVO>> page(EmpListQueryDTO empListQueryDTO){
         log.info("Pagination Search：{}", empListQueryDTO);
         PageResult<EmpVO> pageResult = empService.page(empListQueryDTO);
-        return Result.success(pageResult);
+        return ResponseEntity.ok(pageResult);
     }
 
     /**
-     * Add employee
-     * @param empSaveDTO employee save dto
-     * @return Result object
-     * @throws Exception
+     * Add a new employee.
+     *
+     * @param empSaveDTO employee creation payload
+     * @return 201 Created with the new resource and a Location header pointing to it
      */
     @Log
     @PostMapping
-    public Result save(@RequestBody EmpSaveDTO empSaveDTO) throws Exception {
+    public ResponseEntity<EmpInfoVO> save(@RequestBody EmpSaveDTO empSaveDTO) throws Exception {
         log.info("Add employee：{}", empSaveDTO);
-        empService.save(empSaveDTO);
-        return Result.success();
+        EmpInfoVO created = empService.save(empSaveDTO);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(created.getId())
+                .toUri();
+        return ResponseEntity.created(location).body(created);
     }
 
     /**
-     * Delete employee by id
-     * @param ids a list of employee id
-     * @return Result object
+     * Batch delete employees by ids.
+     *
+     * @param ids a list of employee ids
+     * @return 204 No Content on success
      */
     @Log
     @DeleteMapping
-    public Result delete(@RequestParam List<Integer> ids) {
+    public ResponseEntity<Void> delete(@RequestParam List<Integer> ids) {
         log.info("Delete parameter：{}", ids);
         empService.delete(ids);
-        return Result.success();
+        return ResponseEntity.noContent().build();
     }
 
     /**
-     * Get employee info by id
+     * Get employee info by id.
+     *
      * @param id employee id
-     * @return employee info
+     * @return 200 OK with employee info; 404 if not found (handled centrally)
      */
     @GetMapping("/{id}")
-    public Result getInfo(@PathVariable Integer id) {
+    public ResponseEntity<EmpInfoVO> getInfo(@PathVariable Integer id) {
         log.info("Get employee info by id：{}", id);
         EmpInfoVO empInfoVO = empService.getInfo(id);
-        return Result.success(empInfoVO);
+        return ResponseEntity.ok(empInfoVO);
     }
 
     /**
-     * Update employee info
-     * @param empUpdateDTO employee update dto
-     * @return Result object
+     * Update employee by id.
+     *
+     * @param id employee id (from URL, authoritative)
+     * @param empUpdateDTO update payload
+     * @return 200 OK with the updated employee; 404 if not found
      */
     @Log
-    @PutMapping
-    public Result update(@RequestBody EmpUpdateDTO empUpdateDTO) {
-        log.info("Update employee info：{}", empUpdateDTO);
-        empService.update(empUpdateDTO);
-        return Result.success();
+    @PutMapping("/{id}")
+    public ResponseEntity<EmpInfoVO> update(
+            @PathVariable Integer id,
+            @RequestBody EmpUpdateDTO empUpdateDTO) {
+        log.info("Update employee id={}, payload={}", id, empUpdateDTO);
+        EmpInfoVO updated = empService.update(id, empUpdateDTO);
+        return ResponseEntity.ok(updated);
     }
 
     /**
-     * query all employee basic information
-     * @return a list of employee basic information
+     * Query all employee basic information.
+     *
+     * @return 200 OK with all employees(possibly empty)
      */
     @GetMapping("/list")
-    public Result getAllEmp() {
-        log.info("query all employee basic information");
+    public ResponseEntity<List<EmpVO>> getAllEmp() {
+        log.info("Query all employee basic information");
         List<EmpVO> allEmps = empService.getAllEmp();
-        return Result.success(allEmps);
+        return ResponseEntity.ok(allEmps);
     }
 }
