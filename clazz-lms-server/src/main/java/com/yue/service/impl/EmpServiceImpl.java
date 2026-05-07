@@ -3,6 +3,7 @@ package com.yue.service.impl;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.yue.exception.InvalidCredentialsException;
+import com.yue.exception.ResourceNotFoundException;
 import com.yue.mapper.EmpExprMapper;
 import com.yue.mapper.EmpMapper;
 import com.yue.pojo.dto.EmpListQueryDTO;
@@ -134,7 +135,7 @@ public class EmpServiceImpl implements EmpService {
     public EmpInfoVO getInfo(Integer id) {
         Emp emp = empMapper.getById(id);
         if (emp == null) {
-            return null;
+            throw new ResourceNotFoundException("Employee not found: " + id);
         }
         List<EmpExpr> exprList = empExprMapper.selectByEmpId(id);
 
@@ -165,7 +166,7 @@ public class EmpServiceImpl implements EmpService {
         // 1. check if the employee exists or not
         Emp existingEmp = empMapper.getById(empUpdateDTO.getId());
         if (existingEmp == null) {
-            throw new RuntimeException("Employee not found: " + empUpdateDTO.getId());
+            throw new ResourceNotFoundException("Employee not found: " + empUpdateDTO.getId());
         }
 
         // 2. update employee basic information
