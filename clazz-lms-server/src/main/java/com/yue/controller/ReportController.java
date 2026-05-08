@@ -4,10 +4,10 @@ import com.yue.pojo.vo.ClazzCountVO;
 import com.yue.pojo.vo.EmpGenderVO;
 import com.yue.pojo.vo.EmpJobOptionVO;
 import com.yue.pojo.vo.StudentDegreeVO;
-import com.yue.pojo.Result;
 import com.yue.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,58 +15,58 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * Report controller
- * Provide report statistics data
+ * Report REST controller - provides aggregate / statistics endpoints
+ *
+ * <p>Note: thest endpoints are RPC-flavoured ("get this specific calculation")
+ * rather than purely RESTful resource operations, which is acceptable for
+ * reports / analytics. They still return resources directly via ResponseEntity
+ * for shape consistency with the rest of the API.
  */
 @Slf4j
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/report")
+@RequestMapping("/reports")
 public class ReportController {
 
     private final ReportService reportService;
 
     /**
-     * Get employee job data
-     * @return a result contains an EmpJobOptionVO object
+     * @return 200 OK with employee job-position breakdown
      */
     @GetMapping("/empJobData")
-    public Result getEmpJobData(){
-        log.info("Employee job position data");
+    public ResponseEntity<EmpJobOptionVO> getEmpJobData(){
+        log.info("Get employee job position data");
         EmpJobOptionVO empJobOptionVO = reportService.getEmpJobData();
-        return Result.success(empJobOptionVO);
+        return ResponseEntity.ok(empJobOptionVO);
     }
 
     /**
-     * Get employee gender data
-     * @return a result contains a list of EmpGenderVO objects
+     * @return 200 OK with employee gender breakdown
      */
     @GetMapping("/empGenderData")
-    public Result getGenderData() {
+    public ResponseEntity<List<EmpGenderVO>> getGenderData() {
         log.info("Get employee gender data");
         List<EmpGenderVO> genderList = reportService.getGenderData();
-        return Result.success(genderList);
+        return ResponseEntity.ok(genderList);
     }
 
     /**
-     * Get clazz(class) student count data
-     * @return a Result object contains a ClassCountVO object
+     * @return 200 OK with per-clazz(class) student count
      */
     @GetMapping("/studentCountData")
-    public Result getStudentCountData() {
+    public ResponseEntity<ClazzCountVO> getStudentCountData() {
         log.info("Number of students in the class");
         ClazzCountVO clazzCountVO = reportService.getStudentCountData();
-        return Result.success(clazzCountVO);
+        return ResponseEntity.ok(clazzCountVO);
     }
 
     /**
-     * Get student degree data
-     * @return a result contains a list of StudentDegreeVO objects
+     * @return 200 OK with student degree breakdown
      */
     @GetMapping("/studentDegreeData")
-    public Result getStudentDegreeData() {
+    public ResponseEntity<List<StudentDegreeVO>> getStudentDegreeData() {
         log.info("Number of students with academic qualifications");
         List<StudentDegreeVO> degreeList = reportService.getStudentDegreeData();
-        return Result.success(degreeList);
+        return ResponseEntity.ok(degreeList);
     }
 }
