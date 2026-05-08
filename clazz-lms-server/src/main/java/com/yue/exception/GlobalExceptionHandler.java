@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
@@ -145,6 +146,42 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponseDTO);
+    }
+
+    /**
+     * Handles requests to URLs that don't match any controller mapping.
+     *
+     * <p>Spring 6 / Spring Boot 3 changed default behaviour so that requests to
+     * non-existent URLS throw {@Link NoResourceFoundException} instead of
+     * returning HTTP 404 directly. Without this dedicated handler, the
+     * {@code Exception.class} catch-all below would map these to HTTP 500 -
+     * an obvious bug, since "URL doesn't exist" is a client problem, not a
+     * server error.
+     *
+     * <p> The external message is intentionaly generic ("does not exist")
+     * rather than echoing the requested path or framework details - this
+     * avoids leaking implementation hints to malicious scanners.
+     *
+     * @param ex the not-found exception thrown by Spring
+     * @param request current HTTP request (used to populate the path field)
+     * @return a 404 Not Found response with a proper error body
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleNoResourceFoundException(
+            NoResourceFoundException ex,
+            HttpServletRequest request) {
+        // log at WARN, not ERROR - a request to a nonexistent URL is a client
+        // mistake (or scanner probe), not a server-side failure.
+        log.warn("No resource found at {}", request.getRequestURI());
+
+        ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(
+                "RESOURCE_NOT_FOUND",
+                "The requested resource does not exist",
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponseDTO);
     }
 
     /**
