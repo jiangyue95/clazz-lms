@@ -84,4 +84,14 @@ public interface EmpMapper {
      */
     @Mapper
     Emp getByUsername(String username);
+
+    /**
+     * Update a single employee's password. Used by the one-shot password
+     * migration runner; the runner itself is not committed (see commit #5).
+     *
+     * @param id the employee id
+     * @param password the new password value (expected to be a BCrypt hash)
+     */
+    @Update("UPDATE emp SET password = #{password} WHERE id = #{id}")
+    void updatePassword(@Param("id") Integer id, @Param("password") String password);
 }
