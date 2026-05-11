@@ -91,7 +91,7 @@ public class EmpServiceImpl implements EmpService {
                 .image(empSaveDTO.getImage())
                 .createTime(LocalDateTime.now())
                 .updateTime(LocalDateTime.now())
-                .password("123456")
+                .password(passwordEncoder.encode("123456"))
                 .build();
 
         try {
