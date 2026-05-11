@@ -23,6 +23,7 @@ import com.yue.pojo.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -48,6 +49,9 @@ public class EmpServiceImpl implements EmpService {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     /**
      * Page query employee list
@@ -87,7 +91,7 @@ public class EmpServiceImpl implements EmpService {
                 .image(empSaveDTO.getImage())
                 .createTime(LocalDateTime.now())
                 .updateTime(LocalDateTime.now())
-                .password("123456")
+                .password(passwordEncoder.encode("123456"))
                 .build();
 
         try {
@@ -232,7 +236,7 @@ public class EmpServiceImpl implements EmpService {
             log.warn("Login failed: username not found: {}", dto.getUsername());
             throw new InvalidCredentialsException("Invalid username or password");
         }
-        if (!emp.getPassword().equals(dto.getPassword())) {
+        if (!passwordEncoder.matches(dto.getPassword(), emp.getPassword())) {
             log.warn("Login failed: incorrect password for username: {}", dto.getUsername());
             throw new InvalidCredentialsException("Invalid username or password");
         }

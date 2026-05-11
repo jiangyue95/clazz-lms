@@ -26,8 +26,8 @@ public interface EmpMapper {
      * @param emp an employee entity
      */
     @Options(useGeneratedKeys = true, keyProperty = "id") // 重要获取到生成的主键
-    @Insert("insert into emp(username, name, gender, phone, job, salary, image, entry_date, dept_id, create_time, update_time)" +
-            "    values (#{username}, #{name}, #{gender}, #{phone}, #{job}, #{salary},  #{image}, #{entryDate}, #{deptId}, #{createTime}, #{updateTime})")
+    @Insert("insert into emp(username, password, name, gender, phone, job, salary, image, entry_date, dept_id, create_time, update_time)" +
+            "    values (#{username}, #{password}, #{name}, #{gender}, #{phone}, #{job}, #{salary},  #{image}, #{entryDate}, #{deptId}, #{createTime}, #{updateTime})")
     public void insert(Emp emp);
 
     /**
@@ -84,4 +84,14 @@ public interface EmpMapper {
      */
     @Mapper
     Emp getByUsername(String username);
+
+    /**
+     * Update a single employee's password. Used by the one-shot password
+     * migration runner; the runner itself is not committed (see commit #5).
+     *
+     * @param id the employee id
+     * @param password the new password value (expected to be a BCrypt hash)
+     */
+    @Update("UPDATE emp SET password = #{password} WHERE id = #{id}")
+    void updatePassword(@Param("id") Integer id, @Param("password") String password);
 }
