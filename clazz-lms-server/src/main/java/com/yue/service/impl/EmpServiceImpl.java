@@ -236,7 +236,7 @@ public class EmpServiceImpl implements EmpService {
             log.warn("Login failed: username not found: {}", dto.getUsername());
             throw new InvalidCredentialsException("Invalid username or password");
         }
-        if (!passwordMatches(dto.getPassword(), emp.getPassword())) {
+        if (!passwordEncoder.matches(dto.getPassword(), emp.getPassword())) {
             log.warn("Login failed: incorrect password for username: {}", dto.getUsername());
             throw new InvalidCredentialsException("Invalid username or password");
         }
@@ -254,29 +254,5 @@ public class EmpServiceImpl implements EmpService {
                 .name(emp.getName())
                 .token(token)
                 .build();
-    }
-
-    /**
-     * Verifies a candidate password against a stored credential, supporting
-     * both Bcrypt-hashed and legacy plain-text formats during the migration
-     * transition.
-     *
-     * <p>Once the data migration (commit #5) hashes all remaining plain-text
-     * passwords, the {@code else} branch becomes unreachable and is removed
-     * in commit #6.
-     *
-     * @param raw the candidate password from the login request
-     * @param stored the password as currently stored in the database
-     * @return {@code true} if the candidate matches the stored credential
-     */
-    private boolean passwordMatches(String raw, String stored) {
-        if (stored.startsWith("$2")) {
-            // BCrypt format - verify via the encoder
-            return passwordEncoder.matches(raw, stored);
-        } else {
-            // Legacy plain-text - fall back to direct comparison.
-            // This branch is removed after commit #5's data migration.
-            return stored.equals(raw);
-        }
     }
 }
