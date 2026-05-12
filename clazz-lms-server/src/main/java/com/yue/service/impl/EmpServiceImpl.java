@@ -2,14 +2,12 @@ package com.yue.service.impl;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.yue.exception.BusinessRuleViolationException;
 import com.yue.exception.InvalidCredentialsException;
 import com.yue.exception.ResourceNotFoundException;
 import com.yue.mapper.EmpExprMapper;
 import com.yue.mapper.EmpMapper;
-import com.yue.pojo.dto.EmpListQueryDTO;
-import com.yue.pojo.dto.EmpLoginDTO;
-import com.yue.pojo.dto.EmpSaveDTO;
-import com.yue.pojo.dto.EmpUpdateDTO;
+import com.yue.pojo.dto.*;
 import com.yue.pojo.entity.Emp;
 import com.yue.pojo.entity.EmpExpr;
 import com.yue.pojo.entity.EmpLog;
@@ -23,6 +21,7 @@ import com.yue.pojo.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -254,5 +253,63 @@ public class EmpServiceImpl implements EmpService {
                 .name(emp.getName())
                 .token(token)
                 .build();
+    }
+
+    /**
+     * Register a new employee with the minimal user-controlled fields.
+     *
+     * <p>Admin-controlled fields (dep_id, job, salary) are deliberately left
+     * as NULL - they must be set later by an admin via {@code PUT /emps/{id}}.
+     * Allowing self-registration to set these would be a privilege-escalation
+     * vector (a user could assign themselves to any department or set their
+     * own salary).
+     *
+     * <p>Password is hashed via BCrypt befor storage; never stored as
+     * plain-text. Duplicate username or phone surfaces as a business rule
+     * violation (409 Conflect), not as a database-level error.
+     *
+     * @param dto registration data
+     * @return information about the newly created employee
+     * @throws BusinessRuleViolationException if username or phone exists
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public EmpInfoVO register(EmpRegisterDTO dto) {
+        // 1. Check duplicate username (cheap pre-check to give a clear 409)
+        Emp existingByUsername = empMapper.getByUsername(dto.getUsername());
+        if (existingByUsername != null) {
+            throw new BusinessRuleViolationException(
+                    "Username '" + dto.getUsername() + "' is already taken");
+        }
+
+        // 2. Build entity with admin-controlled fields left NULL
+        Emp emp = Emp.builder()
+                .username(dto.getUsername())
+                .password(passwordEncoder.encode(dto.getPassword()))
+                .name(dto.getName())
+                .gender(dto.getGender())
+                .phone(dto.getPhone())
+                // deptId, job, salary, image, entryDate: left null
+                // - admin must set them via PUT /emps/{id} afterward
+                .createTime(LocalDateTime.now())
+                .updateTime(LocalDateTime.now())
+                .build();
+
+        // 3. Insert；phone uniqueness is enforced by DB unique index.
+        //    If phone collides, the SQL constraint violation surfaces as
+        //    DataIntegrityViolationException - caught here and rethrown as
+        //    BusinessRuleViolationException for a clean 409 response.
+        try {
+            empMapper.insert(emp);
+        } catch (DataIntegrityViolationException ex) {
+            log.warn("Registration failed: integrity violation for username={} phone={}",
+                    dto.getUsername(), dto.getPhone());
+            throw new BusinessRuleViolationException("Username or phone is already taken");
+        }
+
+        log.info("Registered new employee: id={} username={}", emp.getId(), emp.getUsername());
+
+        // 4. Return the created employee's info
+        return getInfo(emp.getId());
     }
 }
