@@ -9,11 +9,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Authentication REST controller.
+ *
+ * <p>Hosts authentication-related endpoints: login, and (in subsequent commits)
+ * registration and password change. Renamed from {@code LoginController} when
+ * the scope expanded beyond login alone.
  *
  * <p>Follows REST conventions: returns the {@link EmpLoginVO} resource directly
  * via {@link ResponseEntity}, uses HTTP status codes for errors (delegated to
@@ -23,8 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/login")
-public class LoginController {
+public class AuthController {
 
     private final EmpService empService;
 
@@ -35,7 +37,7 @@ public class LoginController {
      * @return 200 OK with {@link EmpLoginVO} containing the JWT token;
      *         401 Unauthorized if credentials are invalid (handler centrally);
      */
-    @PostMapping
+    @PostMapping("/login")
     public ResponseEntity<EmpLoginVO> login(@Valid @RequestBody EmpLoginDTO dto) {
         log.info("Employee login attempt: {}", dto.getUsername());
         EmpLoginVO vo = empService.login(dto);
