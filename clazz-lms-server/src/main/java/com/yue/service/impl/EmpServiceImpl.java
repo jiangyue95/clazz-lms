@@ -18,9 +18,8 @@ import com.yue.service.EmpLogService;
 import com.yue.service.EmpService;
 import com.yue.security.JwtService;
 import com.yue.pojo.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,22 +34,14 @@ import java.util.Map;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class EmpServiceImpl implements EmpService {
 
-    @Autowired
-    private EmpMapper empMapper;
-    @Autowired
-    private EmpExprMapper empExprMapper;
-    @Autowired
-    private EmpLogService empLogService;
-    @Autowired
-    private ResourcePatternResolver resourcePatternResolver;
-
-    @Autowired
-    private JwtService jwtService;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final EmpMapper empMapper;
+    private final EmpExprMapper empExprMapper;
+    private final EmpLogService empLogService;
+    private final JwtService jwtService;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * Page query employee list
