@@ -1,9 +1,8 @@
 package com.yue.service;
 
-import com.yue.pojo.dto.EmpListQueryDTO;
-import com.yue.pojo.dto.EmpLoginDTO;
-import com.yue.pojo.dto.EmpSaveDTO;
-import com.yue.pojo.dto.EmpUpdateDTO;
+import com.yue.exception.InvalidCredentialsException;
+import com.yue.exception.ResourceNotFoundException;
+import com.yue.pojo.dto.*;
 import com.yue.pojo.PageResult;
 import com.yue.pojo.vo.EmpInfoVO;
 import com.yue.pojo.vo.EmpLoginVO;
@@ -62,4 +61,24 @@ public interface EmpService {
      * @return an employee login VO
      */
     EmpLoginVO login(EmpLoginDTO dto);
+
+    /**
+     * Register a new employee from a self-service registration form.
+     *
+     * @param dto registration data (validated by controller @Valid)
+     * @return information about the newly created employee
+     * @throws com.yue.exception.BusinessRuleViolationException if username or phone already taken
+     */
+    EmpInfoVO register(EmpRegisterDTO dto);
+
+    /**
+     * Change the currently-authenticated employee's password.
+     *
+     * @param empId the authenticated employee's id (from JWT token)
+     * @param currentPassword the user-provided current password for verification
+     * @param newPassword the new password (will be BCrypt-hashed before storge)
+     * @throws InvalidCredentialsException if currentPassword doesn't match
+     * @throws ResourceNotFoundException if empId doesn't exist (defensive)
+     */
+    void changePassword(Integer empId, String currentPassword, String newPassword);
 }
