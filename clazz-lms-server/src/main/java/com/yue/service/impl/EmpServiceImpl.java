@@ -312,4 +312,49 @@ public class EmpServiceImpl implements EmpService {
         // 4. Return the created employee's info
         return getInfo(emp.getId());
     }
+
+    /**
+     * Change an authenticated employee's password.
+     * 
+     * <p>Verifies the user-provided current password against the stored hash
+     * before applying the change. Even with a valid auth token, knowing the
+     * current password is required - this is a defense against session hijack,
+     * where a stolen token alone shouldn't be enough to lock out the legitimate
+     * user.
+     * 
+     * <p>The empId argument comes from the authenticated user's token, never
+     * from the request body - allowing the body to specify the user would be
+     * a privilege - escalation vector (anyone could change anyone's password).
+     * 
+     * @param empId authenticated employee's id (from JWT token)
+     * @param currentPassword user-provided current password
+     * @param newPassword new password (will be BCrypt-hashed)
+     * @throws ResourceNotFoundException if empId doesn't match a real user
+     *                                    (defensive - shouldn't happen if
+     *                                    the token is valid)
+     * @throws InvalidCredentialsException if currentPassword is wrong
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void changePassword(Integer empId, String currentPassword, String newPassword) {
+        // 1. Load the employee (defensive - empId should be valid per token,
+        //    but verify rather than trust
+        Emp emp = empMapper.getById(empId);
+        if (emp == null) {
+            log.warn("Change-password attempt for non-existent emptId = {}", empId);
+            throw new ResourceNotFoundException("Emp with id" + empId + " not found");
+        }
+
+        // 2. Verify the current password before accepting the change
+        if (!passwordEncoder.matches(currentPassword, emp.getPassword())) {
+            log.warn("Change-password failed: incorrect currentPassword for empId={}", empId);
+            throw new InvalidCredentialsException("Current password is incorrect");
+        }
+
+        // 3. Hash the new password and update
+        String newHash = passwordEncoder.encode(newPassword);
+        empMapper.updatePassword(empId, newHash);
+
+        log.info("Password changed for empId={} username={}", empId, emp.getUsername());
+    }
 }

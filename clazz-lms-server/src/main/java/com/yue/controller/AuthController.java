@@ -1,14 +1,17 @@
 package com.yue.controller;
 
+import com.yue.pojo.dto.EmpChangePasswordDTO;
 import com.yue.pojo.dto.EmpLoginDTO;
 import com.yue.pojo.dto.EmpRegisterDTO;
 import com.yue.pojo.vo.EmpInfoVO;
 import com.yue.pojo.vo.EmpLoginVO;
 import com.yue.service.EmpService;
+import com.yue.utils.BaseContext;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -54,5 +57,23 @@ public class AuthController {
         EmpInfoVO created = empService.register(dto);
         URI location = URI.create("/emps/" + created.getId());
         return ResponseEntity.created(location).body(created);
+    }
+
+    /**
+     * Change the currently-authenticated employee's password.
+     *
+     * <p>The employee id is taken from the JWT token's claims, not from the
+     * request body - this prevents privilege escalation (changing other
+     * user's passwords by manipulating the body).
+     *
+     * @param dto change-password payload (current + new password)
+     * @return 204 No Content on success
+     */
+    @PatchMapping("/me/password")
+    public ResponseEntity<Void> changePassword(@Valid @RequestBody EmpChangePasswordDTO dto) {
+        Integer currentUserId = BaseContext.getCurrentId();
+        log.info("Change-password request from empId={}", currentUserId);
+        empService.changePassword(currentUserId, dto.getCurrentPassword(), dto.getNewPassword());
+        return ResponseEntity.noContent().build();
     }
 }
