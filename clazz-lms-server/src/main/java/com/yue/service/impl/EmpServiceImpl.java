@@ -11,13 +11,17 @@ import com.yue.pojo.dto.*;
 import com.yue.pojo.entity.Emp;
 import com.yue.pojo.entity.EmpExpr;
 import com.yue.pojo.entity.EmpLog;
+import com.yue.pojo.entity.RefreshToken;
 import com.yue.pojo.vo.EmpInfoVO;
 import com.yue.pojo.vo.EmpLoginVO;
 import com.yue.pojo.vo.EmpVO;
+import com.yue.repository.RefreshTokenRepository;
+import com.yue.security.JwtConfigProperties;
 import com.yue.service.EmpLogService;
 import com.yue.service.EmpService;
 import com.yue.security.JwtService;
 import com.yue.pojo.*;
+import com.yue.utils.HashUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -27,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +47,8 @@ public class EmpServiceImpl implements EmpService {
     private final EmpLogService empLogService;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final JwtConfigProperties jwtConfig;
 
     /**
      * Page query employee list
@@ -231,19 +238,60 @@ public class EmpServiceImpl implements EmpService {
             throw new InvalidCredentialsException("Invalid username or password");
         }
 
-        // 3. generate JWT token
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("id", emp.getId());
-        claims.put("username", emp.getUsername());
-        String token = jwtService.generateAccessToken(claims);
+        // 3. generate access token
+        Map<String, Object> accessClaims = new HashMap<>();
+        accessClaims.put("id", emp.getId());
+        accessClaims.put("username", emp.getUsername());
+        String accessToken = jwtService.generateAccessToken(accessClaims);
 
-        // 4. construct and return vo
+        // 4. generate refresh token + persist to Redis (extracted into a helper)
+        String refreshToken = issueRefreshToken(emp);
+
+        // 5. construct and return vo
         return EmpLoginVO.builder()
                 .id(emp.getId())
                 .username(emp.getUsername())
                 .name(emp.getName())
-                .token(token)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .build();
+    }
+
+    /**
+     * Generate a refresh token and persist its hash to Redis
+     *
+     * <p>The raw refresh token is returned to the client (exactly once); only
+     * its SHA-256 hash is stored server-side. A Redis save failure causes login
+     * to fail fast - the dual-token contract promises both tokens, and
+     * returning only access would create an inconsistent client state.
+     *
+     * @param emp the authenticated employee
+     * @return the raw refresh token (to embed in the login response)
+     * @throws IllegalStateException if Redis persistence fails
+     */
+    private String issueRefreshToken(Emp emp) {
+        // Minimal claims - refresh token's only job is identifying who can
+        // exchange it for a new access token. Username will be re-fetched at
+        // /auth/refresh time so a stale value can't slip through.
+        Map<String, Object> refreshClaims = new HashMap<>();
+        refreshClaims.put("id", emp.getId());
+        String rawRefreshToken = jwtService.generateRefreshToken(refreshClaims);
+
+        // Store only the hash, never the raw token (Redis compromise leaks
+        // hashes, not usable credentials).
+        String tokenHash = HashUtil.sha256Hex(rawRefreshToken);
+        LocalDateTime now = LocalDateTime.now();
+        long refreshTtlMs = jwtConfig.getRefreshExpirationMs();
+        RefreshToken record = RefreshToken.builder()
+                .tokenHash(tokenHash)
+                .empId(emp.getId())
+                .issuedAt(now)
+                .expiresAt(now.plus(refreshTtlMs, ChronoUnit.MILLIS))
+                .revokedAt(null)
+                .build();
+        refreshTokenRepository.save(record);
+
+        return rawRefreshToken;
     }
 
     /**
