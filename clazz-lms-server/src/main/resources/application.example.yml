@@ -40,5 +40,7 @@ aliyun:
 jwt:
   # secret used to sign JWT tokens (must be at least 32 chars for HMAC-SHA256)
   secret: your-jwt-secret-here-at-least-32-characters-long
-  # access token expiration in milliseconds (default 12 hours = 43_200_000 ms)
-  expiration-ms: 43200000
+  # access token expiration in ms (default 15 minutes)
+  access-expiration-ms: 900000
+  # refresh token expiration in ms (default 7 days)
+  refresh-expiration-ms: 604800000

@@ -235,7 +235,7 @@ public class EmpServiceImpl implements EmpService {
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", emp.getId());
         claims.put("username", emp.getUsername());
-        String token = jwtService.generateToken(claims);
+        String token = jwtService.generateAccessToken(claims);
 
         // 4. construct and return vo
         return EmpLoginVO.builder()
