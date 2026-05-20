@@ -2,9 +2,7 @@ package com.yue.service.impl;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
-import com.yue.exception.BusinessRuleViolationException;
-import com.yue.exception.InvalidCredentialsException;
-import com.yue.exception.ResourceNotFoundException;
+import com.yue.exception.*;
 import com.yue.mapper.EmpExprMapper;
 import com.yue.mapper.EmpMapper;
 import com.yue.pojo.dto.*;
@@ -15,6 +13,7 @@ import com.yue.pojo.entity.RefreshToken;
 import com.yue.pojo.vo.EmpInfoVO;
 import com.yue.pojo.vo.EmpLoginVO;
 import com.yue.pojo.vo.EmpVO;
+import com.yue.pojo.vo.RefreshVO;
 import com.yue.repository.RefreshTokenRepository;
 import com.yue.security.JwtConfigProperties;
 import com.yue.service.EmpLogService;
@@ -22,6 +21,9 @@ import com.yue.service.EmpService;
 import com.yue.security.JwtService;
 import com.yue.pojo.*;
 import com.yue.utils.HashUtil;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -254,6 +256,51 @@ public class EmpServiceImpl implements EmpService {
                 .name(emp.getName())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .build();
+    }
+
+    @Override
+    public RefreshVO refresh(RefreshDTO dto) {
+        String rawRefreshToken = dto.getRefreshToken();
+
+        // 1. Parse + verify signature (catch expired separately)
+        Claims claims;
+        try {
+            claims = jwtService.parseToken(rawRefreshToken);
+        } catch (ExpiredJwtException e) {
+            log.info("Refresh failed: refresh token expired");
+            throw new RefreshTokenExpiredException("Refresh token has expired; please log in again");
+        } catch (JwtException e) {
+            log.info("Refresh failed: invalid JWT - {}", e.getMessage());
+            throw new InvalidRefreshTokenException("Invalid refresh token");
+        }
+
+        // 2. SHA-256 hash and lookup in Redis
+        String tokenHash = HashUtil.sha256Hex(rawRefreshToken);
+        RefreshToken stored = refreshTokenRepository.findByTokenHash(tokenHash);
+
+        // 3. Validate stored record (handles null, revoked, expired)
+        if (!refreshTokenRepository.isValid(stored)) {
+            log.info("Refresh failed: token not found, revoked, or expired in Redis");
+            throw new InvalidRefreshTokenException("Invalid refresh token");
+        }
+
+        // 4. Re-query emp from DB (Trade-off 5 - fresh username, fail if deleted)
+        Integer empId = stored.getEmpId();
+        Emp emp = empMapper.getById(empId);
+        if (emp == null) {
+            log.warn("Refresh failed: refresh token's empId {} no longer exist", empId);
+            throw new InvalidRefreshTokenException("Invalid refresh token");
+        }
+
+        // 5. Generate new access token (not rotating refresh - deferred follow-up)
+        Map<String, Object> accessClaims = new HashMap<>();
+        accessClaims.put("id", emp.getId());
+        accessClaims.put("username", emp.getUsername());
+        String newAccessToken = jwtService.generateAccessToken(accessClaims);
+
+        return RefreshVO.builder()
+                .accessToken(newAccessToken)
                 .build();
     }
 

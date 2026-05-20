@@ -3,14 +3,17 @@ package com.yue.controller;
 import com.yue.pojo.dto.EmpChangePasswordDTO;
 import com.yue.pojo.dto.EmpLoginDTO;
 import com.yue.pojo.dto.EmpRegisterDTO;
+import com.yue.pojo.dto.RefreshDTO;
 import com.yue.pojo.vo.EmpInfoVO;
 import com.yue.pojo.vo.EmpLoginVO;
+import com.yue.pojo.vo.RefreshVO;
 import com.yue.service.EmpService;
 import com.yue.utils.BaseContext;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -49,6 +52,17 @@ public class AuthController {
         log.info("Employee login attempt: {}", dto.getUsername());
         EmpLoginVO vo = empService.login(dto);
         return ResponseEntity.ok(vo);
+    }
+
+    /**
+     * Get a new access token using the refresh token.
+     *
+     * @param dto refresh token
+     * @return 200 OK with {@link RefreshVO} containing the new access token;
+     */
+    @PostMapping("/refresh")
+    public RefreshVO refresh(@Validated @RequestBody RefreshDTO dto) {
+        return empService.refresh(dto);
     }
 
     @PostMapping("/register")
