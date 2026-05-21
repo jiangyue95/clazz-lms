@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 /**
  * Stores and retrieves refresh tokens in Redis.
@@ -37,6 +38,9 @@ public class RefreshTokenRepository {
 
     private static final String KEY_PREFIX = "refresh_token:";
 
+    /** Per-user index - tracks all tokenHashes belonging to one employee. */
+    private static final String USER_INDEX_PREFIX = "refresh_user:";
+
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
 
@@ -47,13 +51,20 @@ public class RefreshTokenRepository {
      */
     public void save(RefreshToken token) {
         String key = KEY_PREFIX + token.getTokenHash();
+        String userIndexKey = USER_INDEX_PREFIX + token.getEmpId();
         try {
             String json = objectMapper.writeValueAsString(token);
             // TTL = time from now until expiresAt. Redis will auto-delete the
             // key when this elapses, so naturally expired tokens need no cleanup.
             Duration ttl = Duration.between(LocalDateTime.now(), token.getExpiresAt());
             redisTemplate.opsForValue().set(key, json, ttl);
-            log.info("Stored refresh token for empId={} (ttl={}s)", token.getEmpId(), ttl.toSeconds());
+
+            // Maintain reverse index: empId -> set of tokenHashes
+            // Enables revokeAllByEmpId() to find every token for a user.
+            redisTemplate.opsForSet().add(userIndexKey, token.getTokenHash());
+            redisTemplate.expire(userIndexKey, ttl);
+
+            log.info("Persisted refresh token for empId={} (ttl={}s)", token.getEmpId(), ttl.toSeconds());
         } catch (Exception e) {
             // Serialization failure or Redis connectivity issue - surface it
             // rather than silently failing to persist the token.
@@ -131,5 +142,42 @@ public class RefreshTokenRepository {
             return false;
         }
         return token.getExpiresAt().isAfter(LocalDateTime.now());
+    }
+
+    /**
+     * Revoke every refresh token issued to the given employee.
+     *
+     * <p>Used when a password change requires invalidating all sessions -
+     * any attacker holding a stolen refresh token loses access immediately,
+     * even before its natural expiry.
+     *
+     * <p>Each individual token is soft-deleted via {@link #revokeByTokenHash}
+     * for consistency with single-token revocation: the records remain in
+     * Redis with revokedAt set, until their natural TTL elapses. The
+     * per-user index itself is deleted, since after this call there are no active tokens to track.
+     *
+     * @param empId the employee whose tokens should be revoked
+     * @return number of tokens revoked
+     */
+    public int revokeAllByEmpId(Integer empId) {
+        String userIndexKey = USER_INDEX_PREFIX + empId;
+        Set<String> tokenHashes = redisTemplate.opsForSet().members(userIndexKey);
+
+        if (tokenHashes == null || tokenHashes.isEmpty()) {
+            log.info("No refresh tokens to revoke for empId={}", empId);
+            return 0;
+        }
+
+        int count = 0;
+        for (String hash : tokenHashes) {
+            revokeByTokenHash(hash);
+            count++;
+        }
+
+        // Index is no longer needed - all tokens it pointed to are now revoked.
+        redisTemplate.delete(userIndexKey);
+
+        log.info("Revoked {} refresh token(s) for empId={}", count, empId);
+        return count;
     }
 }

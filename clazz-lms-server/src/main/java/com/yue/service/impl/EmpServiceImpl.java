@@ -427,7 +427,7 @@ public class EmpServiceImpl implements EmpService {
         //    but verify rather than trust
         Emp emp = empMapper.getById(empId);
         if (emp == null) {
-            log.warn("Change-password attempt for non-existent emptId = {}", empId);
+            log.warn("Change-password attempt for non-existent empId = {}", empId);
             throw new ResourceNotFoundException("Emp with id" + empId + " not found");
         }
 
@@ -440,7 +440,22 @@ public class EmpServiceImpl implements EmpService {
         // 3. Hash the new password and update
         String newHash = passwordEncoder.encode(newPassword);
         empMapper.updatePassword(empId, newHash);
-
         log.info("Password changed for empId={} username={}", empId, emp.getUsername());
+
+        // 4. Revoke all refresh tokens for this employee.
+        //    IMPORTANT: This must be the LAST operation in the method
+        //    @Transactional rolls back DB on uncaught exceptions, but Redis is
+        //    not transactional, if any code below this point throws, DB would
+        //    roll back (password unchanged) while Redis would not (tokens
+        //    revoked). The try-catch swallows Redis failure so nothing
+        //    propagates; do not add code after it that could throw.
+        try {
+            int revoked = refreshTokenRepository.revokeAllByEmpId(empId);
+            log.info("Revoked {} refresh tokens of employee:{} in Redis", revoked, empId);
+        } catch (Exception e) {
+            log.error("Password changed for empId={} but refresh token revoke FAILED: {}." +
+                    "Old refresh tokens remain valid until natural expiry - manual cleanup may be required.",
+                    empId, e.getMessage(), e);
+        }
     }
 }
