@@ -73,6 +73,15 @@ public class TokenInterceptor implements HandlerInterceptor {
         // 3. Verify the token and stash the user id in BaseContext
         try {
             Claims claims = jwtService.parseToken(token);
+
+            // Check the type of token
+            String tokenType = (String) claims.get("token_type");
+            if (!JwtService.TOKEN_TYPE_ACCESS.equals(tokenType)) {
+                log.info("Non-access token used at {}: token_type={}",request.getRequestURI(), tokenType);
+                writeUnauthorizedResponse(request, response, ERROR_CODE_UNAUTHORIZED, "Authentication required");
+                return false;
+            }
+
             BaseContext.setCurrentId((Integer) claims.get("id"));
             log.info("Authenticated empId: {}", BaseContext.getCurrentId());
             return true;

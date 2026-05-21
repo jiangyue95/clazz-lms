@@ -27,6 +27,15 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class JwtService {
 
+    /** Token type claim - distinguishes access from refresh tokens. */
+    private static final String TOKEN_TYPE_CLAIM = "token_type";
+
+    /** Token type value for short-lived access tokens. */
+    public static final String TOKEN_TYPE_ACCESS = "access";
+
+    /** Token type value for long-lived refresh tokens. */
+    public static final String TOKEN_TYPE_REFRESH = "refresh";
+
     private final JwtConfigProperties config;
 
     /**
@@ -49,6 +58,7 @@ public class JwtService {
      * @return compact JWT string
      */
     public String generateAccessToken(Map<String, Object> claims) {
+        claims.put(TOKEN_TYPE_CLAIM, TOKEN_TYPE_ACCESS);
         return buildToken(claims, config.getAccessExpirationMs());
     }
 
@@ -60,6 +70,7 @@ public class JwtService {
      * @return compact JWT string
      */
     public String generateRefreshToken(Map<String, Object> claims) {
+        claims.put(TOKEN_TYPE_CLAIM, TOKEN_TYPE_REFRESH);
         return buildToken(claims, config.getRefreshExpirationMs());
     }
 
