@@ -31,7 +31,11 @@ public class JwtConfigProperties {
     @NotBlank
     private String secret;
 
-    /** Token validity duration in milliseconds. */
+    /** Access token validity (short-lived; used for every business request). */
     @Positive
-    private long expirationMs;
+    private long accessExpirationMs;
+
+    /** Refresh token validity (long-lived; used only at /auth/refresh). */
+    @Positive
+    private long refreshExpirationMs;
 }

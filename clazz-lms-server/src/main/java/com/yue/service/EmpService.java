@@ -1,12 +1,14 @@
 package com.yue.service;
 
 import com.yue.exception.InvalidCredentialsException;
+import com.yue.exception.RefreshTokenExpiredException;
 import com.yue.exception.ResourceNotFoundException;
 import com.yue.pojo.dto.*;
 import com.yue.pojo.PageResult;
 import com.yue.pojo.vo.EmpInfoVO;
 import com.yue.pojo.vo.EmpLoginVO;
 import com.yue.pojo.vo.EmpVO;
+import com.yue.pojo.vo.RefreshVO;
 
 import java.util.List;
 
@@ -81,4 +83,14 @@ public interface EmpService {
      * @throws ResourceNotFoundException if empId doesn't exist (defensive)
      */
     void changePassword(Integer empId, String currentPassword, String newPassword);
+
+    /**
+     * Exchange a refresh token for a new access token.
+     *
+     * @param dto refresh token request
+     * @return new access token wrapped in {@link RefreshVO}
+     * @throws RefreshTokenExpiredException if the refresh token has expired
+     * @throws InvalidCredentialsException for all other validation failures
+     */
+    RefreshVO refresh(RefreshDTO dto);
 }

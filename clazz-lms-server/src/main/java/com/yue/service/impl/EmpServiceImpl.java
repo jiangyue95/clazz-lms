@@ -2,22 +2,28 @@ package com.yue.service.impl;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
-import com.yue.exception.BusinessRuleViolationException;
-import com.yue.exception.InvalidCredentialsException;
-import com.yue.exception.ResourceNotFoundException;
+import com.yue.exception.*;
 import com.yue.mapper.EmpExprMapper;
 import com.yue.mapper.EmpMapper;
 import com.yue.pojo.dto.*;
 import com.yue.pojo.entity.Emp;
 import com.yue.pojo.entity.EmpExpr;
 import com.yue.pojo.entity.EmpLog;
+import com.yue.pojo.entity.RefreshToken;
 import com.yue.pojo.vo.EmpInfoVO;
 import com.yue.pojo.vo.EmpLoginVO;
 import com.yue.pojo.vo.EmpVO;
+import com.yue.pojo.vo.RefreshVO;
+import com.yue.repository.RefreshTokenRepository;
+import com.yue.security.JwtConfigProperties;
 import com.yue.service.EmpLogService;
 import com.yue.service.EmpService;
 import com.yue.security.JwtService;
 import com.yue.pojo.*;
+import com.yue.utils.HashUtil;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -27,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +49,8 @@ public class EmpServiceImpl implements EmpService {
     private final EmpLogService empLogService;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final JwtConfigProperties jwtConfig;
 
     /**
      * Page query employee list
@@ -231,19 +240,105 @@ public class EmpServiceImpl implements EmpService {
             throw new InvalidCredentialsException("Invalid username or password");
         }
 
-        // 3. generate JWT token
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("id", emp.getId());
-        claims.put("username", emp.getUsername());
-        String token = jwtService.generateToken(claims);
+        // 3. generate access token
+        Map<String, Object> accessClaims = new HashMap<>();
+        accessClaims.put("id", emp.getId());
+        accessClaims.put("username", emp.getUsername());
+        String accessToken = jwtService.generateAccessToken(accessClaims);
 
-        // 4. construct and return vo
+        // 4. generate refresh token + persist to Redis (extracted into a helper)
+        String refreshToken = issueRefreshToken(emp);
+
+        // 5. construct and return vo
         return EmpLoginVO.builder()
                 .id(emp.getId())
                 .username(emp.getUsername())
                 .name(emp.getName())
-                .token(token)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .build();
+    }
+
+    @Override
+    public RefreshVO refresh(RefreshDTO dto) {
+        String rawRefreshToken = dto.getRefreshToken();
+
+        // 1. Parse + verify signature (catch expired separately)
+        Claims claims;
+        try {
+            claims = jwtService.parseToken(rawRefreshToken);
+        } catch (ExpiredJwtException e) {
+            log.info("Refresh failed: refresh token expired");
+            throw new RefreshTokenExpiredException("Refresh token has expired; please log in again");
+        } catch (JwtException e) {
+            log.info("Refresh failed: invalid JWT - {}", e.getMessage());
+            throw new InvalidRefreshTokenException("Invalid refresh token");
+        }
+
+        // 2. SHA-256 hash and lookup in Redis
+        String tokenHash = HashUtil.sha256Hex(rawRefreshToken);
+        RefreshToken stored = refreshTokenRepository.findByTokenHash(tokenHash);
+
+        // 3. Validate stored record (handles null, revoked, expired)
+        if (!refreshTokenRepository.isValid(stored)) {
+            log.info("Refresh failed: token not found, revoked, or expired in Redis");
+            throw new InvalidRefreshTokenException("Invalid refresh token");
+        }
+
+        // 4. Re-query emp from DB (Trade-off 5 - fresh username, fail if deleted)
+        Integer empId = stored.getEmpId();
+        Emp emp = empMapper.getById(empId);
+        if (emp == null) {
+            log.warn("Refresh failed: refresh token's empId {} no longer exist", empId);
+            throw new InvalidRefreshTokenException("Invalid refresh token");
+        }
+
+        // 5. Generate new access token (not rotating refresh - deferred follow-up)
+        Map<String, Object> accessClaims = new HashMap<>();
+        accessClaims.put("id", emp.getId());
+        accessClaims.put("username", emp.getUsername());
+        String newAccessToken = jwtService.generateAccessToken(accessClaims);
+
+        return RefreshVO.builder()
+                .accessToken(newAccessToken)
+                .build();
+    }
+
+    /**
+     * Generate a refresh token and persist its hash to Redis
+     *
+     * <p>The raw refresh token is returned to the client (exactly once); only
+     * its SHA-256 hash is stored server-side. A Redis save failure causes login
+     * to fail fast - the dual-token contract promises both tokens, and
+     * returning only access would create an inconsistent client state.
+     *
+     * @param emp the authenticated employee
+     * @return the raw refresh token (to embed in the login response)
+     * @throws IllegalStateException if Redis persistence fails
+     */
+    private String issueRefreshToken(Emp emp) {
+        // Minimal claims - refresh token's only job is identifying who can
+        // exchange it for a new access token. Username will be re-fetched at
+        // /auth/refresh time so a stale value can't slip through.
+        Map<String, Object> refreshClaims = new HashMap<>();
+        refreshClaims.put("id", emp.getId());
+        String rawRefreshToken = jwtService.generateRefreshToken(refreshClaims);
+
+        // Store only the hash, never the raw token (Redis compromise leaks
+        // hashes, not usable credentials).
+        String tokenHash = HashUtil.sha256Hex(rawRefreshToken);
+        LocalDateTime now = LocalDateTime.now();
+        long refreshTtlMs = jwtConfig.getRefreshExpirationMs();
+        RefreshToken record = RefreshToken.builder()
+                .tokenHash(tokenHash)
+                .empId(emp.getId())
+                .issuedAt(now)
+                .expiresAt(now.plus(refreshTtlMs, ChronoUnit.MILLIS))
+                .revokedAt(null)
+                .build();
+        refreshTokenRepository.save(record);
+
+        return rawRefreshToken;
     }
 
     /**
@@ -332,7 +427,7 @@ public class EmpServiceImpl implements EmpService {
         //    but verify rather than trust
         Emp emp = empMapper.getById(empId);
         if (emp == null) {
-            log.warn("Change-password attempt for non-existent emptId = {}", empId);
+            log.warn("Change-password attempt for non-existent empId = {}", empId);
             throw new ResourceNotFoundException("Emp with id" + empId + " not found");
         }
 
@@ -345,7 +440,22 @@ public class EmpServiceImpl implements EmpService {
         // 3. Hash the new password and update
         String newHash = passwordEncoder.encode(newPassword);
         empMapper.updatePassword(empId, newHash);
-
         log.info("Password changed for empId={} username={}", empId, emp.getUsername());
+
+        // 4. Revoke all refresh tokens for this employee.
+        //    IMPORTANT: This must be the LAST operation in the method
+        //    @Transactional rolls back DB on uncaught exceptions, but Redis is
+        //    not transactional, if any code below this point throws, DB would
+        //    roll back (password unchanged) while Redis would not (tokens
+        //    revoked). The try-catch swallows Redis failure so nothing
+        //    propagates; do not add code after it that could throw.
+        try {
+            int revoked = refreshTokenRepository.revokeAllByEmpId(empId);
+            log.info("Revoked {} refresh tokens of employee:{} in Redis", revoked, empId);
+        } catch (Exception e) {
+            log.error("Password changed for empId={} but refresh token revoke FAILED: {}." +
+                    "Old refresh tokens remain valid until natural expiry - manual cleanup may be required.",
+                    empId, e.getMessage(), e);
+        }
     }
 }

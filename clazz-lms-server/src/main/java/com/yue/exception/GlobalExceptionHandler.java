@@ -72,8 +72,8 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * handle the unauthorized exception
-     * @param ex an unauthorized exception object
+     * handle the unauthorised exception
+     * @param ex an unauthorised exception object
      * @param request current HTTP request object
      * @return a  HTTP response entity
      */
@@ -195,11 +195,9 @@ public class GlobalExceptionHandler {
             Exception ex,
             HttpServletRequest request) {
 
-        // 记录详细异常信息到服务器日志（包含 stack tree）
         // record detailed exception info into server log (including stack tree)
         log.error("Uncaught Exception at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
 
-        // 返回给客户端的信息要“保守” -- 不能暴露内部细节
         // the information returned to client should be conservative - DO NOT expose server-side details
         ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(
                 "INTERNAL_ERROR",
@@ -242,5 +240,39 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponseDTO);
+    }
+
+    @ExceptionHandler(RefreshTokenExpiredException.class)
+    public ResponseEntity<ErrorResponseDTO> handleRefreshTokenExpired(
+            RefreshTokenExpiredException e,
+            HttpServletRequest request) {
+        log.info("RefreshToken expired at {}: {}", request.getRequestURI(), e.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ErrorResponseDTO(
+                        "REFRESH_TOKEN_EXPIRED",
+                        e.getMessage(),
+                        LocalDateTime.now(),
+                        request.getRequestURI()
+                ));
+    }
+
+    /**
+     *
+     * @param e
+     * @param request
+     * @return
+     */
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ErrorResponseDTO> handleInvalidRefreshToken(
+            InvalidRefreshTokenException e,
+            HttpServletRequest request) {
+        log.info("InvalidRefreshToken at {}: {}", request.getRequestURI(), e.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ErrorResponseDTO(
+                        "INVALID_REFRESH_TOKEN",
+                        e.getMessage(),
+                        LocalDateTime.now(),
+                        request.getRequestURI()
+                ));
     }
 }

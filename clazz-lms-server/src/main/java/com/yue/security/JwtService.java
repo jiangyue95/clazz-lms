@@ -27,6 +27,15 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class JwtService {
 
+    /** Token type claim - distinguishes access from refresh tokens. */
+    private static final String TOKEN_TYPE_CLAIM = "token_type";
+
+    /** Token type value for short-lived access tokens. */
+    public static final String TOKEN_TYPE_ACCESS = "access";
+
+    /** Token type value for long-lived refresh tokens. */
+    public static final String TOKEN_TYPE_REFRESH = "refresh";
+
     private final JwtConfigProperties config;
 
     /**
@@ -43,17 +52,40 @@ public class JwtService {
     }
 
     /**
-     * Generate a signed JWT token with the given claims.
+     * Generate a short-lived access token for authenticating business requests.
      *
-     * @param claims arbitrary key-value pairs to embed in the token payload
-     * @return compact JWT string ({@code header.payload.signature})
+     * @param claims subject identity claims (typically emp id, username)
+     * @return compact JWT string
      */
-    public String generateToken(Map<String, Object> claims) {
+    public String generateAccessToken(Map<String, Object> claims) {
+        claims.put(TOKEN_TYPE_CLAIM, TOKEN_TYPE_ACCESS);
+        return buildToken(claims, config.getAccessExpirationMs());
+    }
+
+    /**
+     * Generate a long-lived refresh token, used only at the /auth/refresh
+     * endpoint to obtain a new access token.
+     *
+     * @param claims subject identity claims (typically emp id, username)
+     * @return compact JWT string
+     */
+    public String generateRefreshToken(Map<String, Object> claims) {
+        claims.put(TOKEN_TYPE_CLAIM, TOKEN_TYPE_REFRESH);
+        return buildToken(claims, config.getRefreshExpirationMs());
+    }
+
+    /**
+     * Shared token building logic - claims + signed JWT with given TTL.
+     * Private because callers should use {@link #generateRefreshToken} or
+     * {@link #generateRefreshToken} so the access/refresh distinction is
+     * explicit at the call site.
+     */
+    private String buildToken(Map<String, Object> claims, long ttlMs) {
         long nowMs = System.currentTimeMillis();
         return Jwts.builder()
                 .claims(claims)
                 .issuedAt(new Date(nowMs))
-                .expiration(new Date(nowMs + config.getExpirationMs()))
+                .expiration(new Date(nowMs + ttlMs))
                 .signWith(signingKey)
                 .compact();
     }

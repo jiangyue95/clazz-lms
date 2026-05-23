@@ -97,6 +97,13 @@
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-crypto</artifactId>
         </dependency>
+
+        <!-- Spring Data Redis: stores refresh tokens with automatic TTL -->
+        <!-- Used for the dual-token authentication flow (introduced in this PR). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
