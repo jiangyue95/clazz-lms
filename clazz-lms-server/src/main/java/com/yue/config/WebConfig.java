@@ -7,8 +7,12 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * Custom Web Config class
- * Not in use, this is an example
+ * Web MVC configuration
+ *
+ * <p>Register the {@link TokenInterceptor} that performs JWT validation
+ * for protected endpoints, and whitelists public endpoints (login, registration,
+ * token refresh) as well as OpenAPI documentation routes (Swagger UI and
+ * its static resources).
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -21,14 +25,19 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(tokenInterceptor)
                 .addPathPatterns("/**") // Intercept all requests
                 .excludePathPatterns(
+                        // --- Authentication endpoints (no token yet) ---
                         "/login",
                         "/register",
+                        "/refresh",
+
+                        // --- Browser noise ---
                         "/favicon.ico",
-                        "/doc.html",
+
+                        // --- OpenAPI documentation ---
                         "/v3/api-docs/**",
+                        "/swagger-ui.html",
                         "/swagger-ui/**",
-                        "/webjars/**",
-                        "/refresh"
+                        "/webjars/**"
                 ); // The login interface is not intercepted
     }
 }
