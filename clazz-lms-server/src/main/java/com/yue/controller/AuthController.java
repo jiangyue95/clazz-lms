@@ -9,11 +9,13 @@ import com.yue.pojo.vo.EmpLoginVO;
 import com.yue.pojo.vo.RefreshVO;
 import com.yue.service.EmpService;
 import com.yue.utils.BaseContext;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,6 +35,7 @@ import java.net.URI;
  * {@code GlobalExceptionHandler}), and uses {@code @Valid} to enforce input
  * constraints declared on the DTO.
  */
+@Tag(name = "Auth", description = "Authentication and account credentials")
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -47,6 +50,11 @@ public class AuthController {
      * @return 200 OK with {@link EmpLoginVO} containing the JWT token;
      *         401 Unauthorized if credentials are invalid (handler centrally);
      */
+    @Operation(
+            summary = "Authenticate and obtain access + refresh tokens",
+            operationId = "login"
+    )
+    @SecurityRequirements({})
     @PostMapping("/login")
     public ResponseEntity<EmpLoginVO> login(@Valid @RequestBody EmpLoginDTO dto) {
         log.info("Employee login attempt: {}", dto.getUsername());
@@ -60,11 +68,24 @@ public class AuthController {
      * @param dto refresh token
      * @return 200 OK with {@link RefreshVO} containing the new access token;
      */
+    @Operation(
+            summary = "Exchange a refresh token for a new access token",
+            description = "Validates the refresh token against the server-side " +
+                    "store (Redis). Returns a new access token; the refresh token " +
+                    "itself is not rotated in this version.",
+            operationId = "refreshAccessToken"
+    )
+    @SecurityRequirements({})
     @PostMapping("/refresh")
-    public RefreshVO refresh(@Validated @RequestBody RefreshDTO dto) {
-        return empService.refresh(dto);
+    public ResponseEntity<RefreshVO> refresh(@Valid @RequestBody RefreshDTO dto) {
+        return ResponseEntity.ok(empService.refresh(dto));
     }
 
+    @Operation(
+            summary = "Register a new employee account",
+            operationId = "register"
+    )
+    @SecurityRequirements({})
     @PostMapping("/register")
     public ResponseEntity<EmpInfoVO> register(@Valid @RequestBody EmpRegisterDTO dto) {
         log.info("Registration attempt for username: {}", dto.getUsername());
@@ -83,6 +104,13 @@ public class AuthController {
      * @param dto change-password payload (current + new password)
      * @return 204 No Content on success
      */
+    @Operation(
+            summary = "Change the current user's password",
+            operationId = "changePassword"
+            // No @SecurityRequirements override: this endpoint inherits the
+            // global bearerAuth requirement (correct-you must be logged in
+            // to change your password).
+    )
     @PatchMapping("/me/password")
     public ResponseEntity<Void> changePassword(@Valid @RequestBody EmpChangePasswordDTO dto) {
         Integer currentUserId = BaseContext.getCurrentId();

@@ -7,6 +7,8 @@ import com.yue.pojo.ClazzQueryParam;
 import com.yue.pojo.PageResult;
 import com.yue.pojo.vo.ClazzVO;
 import com.yue.service.ClazzService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +24,12 @@ import java.util.List;
  * <p>Follows REST conventions: returns DTOs directly, uses HTTP status codes
  * for errors (delegated to GlobalExceptionHandler), and leverages proper HTTP
  * semantics (201 Created for POST, 204 No Content for DELETE).
+ *
+ * <p>Note: {@code Clazz} is an internal Java workaround for the reserved word
+ * {@code class}. The user-facing tag and documentation use the correct English
+ * term "Classes".
  */
+@Tag(name = "Classes", description = "Class (cohort) management")
 @Slf4j
 @RestController
 @RequestMapping("/clazzs")
@@ -37,6 +44,10 @@ public class ClazzController {
      * @param clazzQueryParam query parameters
      * @return 200 OK with the paged result (possibly empty)
      */
+    @Operation(
+            summary = "Page classes with optional filters",
+            operationId = "pageClazzs"
+    )
     @GetMapping
     public ResponseEntity<PageResult<ClazzVO>> page(ClazzQueryParam clazzQueryParam) {
         log.info("Query clazz(class) list by pagination: {}", clazzQueryParam);
@@ -50,6 +61,10 @@ public class ClazzController {
      * @param clazzSaveDTO clazz save dto
      * @return 201 Created with the new resource and a location header pointing to it
      */
+    @Operation(
+            summary = "Create a new class",
+            operationId = "createClazz"
+    )
     @Log
     @PostMapping
     public ResponseEntity<ClazzVO> save(@RequestBody ClazzSaveDTO clazzSaveDTO) {
@@ -70,6 +85,10 @@ public class ClazzController {
      * @param id clazz id
      * @return 200 OK with clazz info; 404 if not found (handled centrally)
      */
+    @Operation(
+            summary = "Get a class by id",
+            operationId = "getClazz"
+    )
     @GetMapping("/{id}")
     public ResponseEntity<ClazzVO> getClazzById(@PathVariable Integer id) {
         log.info("Query clazz(class) by id：{}", id);
@@ -84,6 +103,10 @@ public class ClazzController {
      * @param clazzUpdateDTO update payload
      * @return 200 OK with the updated clazz; 404 if not found
      */
+    @Operation(
+            summary = "Update a class by id",
+            operationId = "updateClazz"
+    )
     @Log
     @PutMapping("/{id}")
     public ResponseEntity<ClazzVO> modifyClazz(
@@ -100,6 +123,10 @@ public class ClazzController {
      * @param id clazz id
      * @return 204 No Content on success; 404 if not found
      */
+    @Operation(
+            summary = "Delete a class by id",
+            operationId = "deleteClazz"
+    )
     @Log
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> removeClazzById(@PathVariable Integer id){
@@ -113,6 +140,13 @@ public class ClazzController {
      *
      * @return 200 OK with all clazzs (possibly empty)
      */
+    @Operation(
+            summary = "List all classes (unpaginated)",
+            description = "Returns the full list of classes without pagination. " +
+                    "Intended for dropdowns and selectors; use GET /clazzs for " +
+                    "paginated browsing.",
+            operationId = "listAllClazzs"
+    )
     @GetMapping("/list")
     public ResponseEntity<List<ClazzVO>> getAllClazzs() {
         log.info("Query all clazz(class) list");

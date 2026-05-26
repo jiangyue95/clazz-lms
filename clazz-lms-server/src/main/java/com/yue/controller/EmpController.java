@@ -8,6 +8,8 @@ import com.yue.pojo.PageResult;
 import com.yue.pojo.vo.EmpInfoVO;
 import com.yue.pojo.vo.EmpVO;
 import com.yue.service.EmpService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -18,8 +20,20 @@ import java.net.URI;
 import java.util.List;
 
 /**
- * Employee management controller
+ * Employee management controller.
+ *
+ * <p>An "employee" in this system covers all staff role: teachers, head
+ * teachers, and advisors. The {@code job} field on the entity distinguishes
+ * roles via an enumerated integer.
+ *
+ * <p>Follows REST conventions: return DTOs directly, uses HTTP status codes
+ * for errors (delegated to GlobalExceptionHandler), and leverages proper HTTP
+ * semantics (201 Created for POST, 204 No Content for DELETE).
  */
+@Tag(
+        name = "Employees",
+        description = "Employee management (teachers, head teachers, advisors)"
+)
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -34,6 +48,10 @@ public class EmpController {
      * @param empListQueryDTO query parameters
      * @return 200 OK with the paged result (possibly empty)
      */
+    @Operation(
+            summary = "Page employees with optional filters",
+            operationId = "pageEmps"
+    )
     @GetMapping
     public ResponseEntity<PageResult<EmpVO>> page(EmpListQueryDTO empListQueryDTO){
         log.info("Pagination Search：{}", empListQueryDTO);
@@ -47,6 +65,10 @@ public class EmpController {
      * @param empSaveDTO employee creation payload
      * @return 201 Created with the new resource and a Location header pointing to it
      */
+    @Operation(
+            summary = "Create a new employee",
+            operationId = "createEmp"
+    )
     @Log
     @PostMapping
     public ResponseEntity<EmpInfoVO> save(@RequestBody EmpSaveDTO empSaveDTO) throws Exception {
@@ -67,6 +89,14 @@ public class EmpController {
      * @param ids a list of employee ids
      * @return 204 No Content on success
      */
+    @Operation(
+            summary = "Batch delete employees by ids",
+            description = "Accept a comma-separated list of employee ids as a " +
+                    "query parameter, e.g. DELETE /emps?ids=1,2,3. Best suited " +
+                    "for small batches; very large batches may hit URL length" +
+                    "limits.",
+            operationId = "deleteEmps"
+    )
     @Log
     @DeleteMapping
     public ResponseEntity<Void> delete(@RequestParam List<Integer> ids) {
@@ -81,6 +111,14 @@ public class EmpController {
      * @param id employee id
      * @return 200 OK with employee info; 404 if not found (handled centrally)
      */
+    @Operation(
+            summary = "Get an employee by id (with work experience)",
+            description = "Returns the full employee detail including the " +
+                    "nested work-experience list (exprList). For list/page " +
+                    "queries use GET /emps which returns a slimmer EmpVO " +
+                    "without exprList.",
+            operationId = "getEmp"
+    )
     @GetMapping("/{id}")
     public ResponseEntity<EmpInfoVO> getInfo(@PathVariable Integer id) {
         log.info("Get employee info by id：{}", id);
@@ -95,6 +133,10 @@ public class EmpController {
      * @param empUpdateDTO update payload
      * @return 200 OK with the updated employee; 404 if not found
      */
+    @Operation(
+            summary = "Update an employee by id",
+            operationId = "updateEmp"
+    )
     @Log
     @PutMapping("/{id}")
     public ResponseEntity<EmpInfoVO> update(
@@ -110,6 +152,13 @@ public class EmpController {
      *
      * @return 200 OK with all employees(possibly empty)
      */
+    @Operation(
+            summary = "List all employees (unpaginated)",
+            description = "Returns the full list of employees without pagination. " +
+                    "Intended for dropdowns and selectors; use GET /emps for " +
+                    "paginated browsing.",
+            operationId = "listAllEmps"
+    )
     @GetMapping("/list")
     public ResponseEntity<List<EmpVO>> getAllEmp() {
         log.info("Query all employee basic information");
