@@ -3,7 +3,14 @@
         PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.yue.mapper.StudentMapper">
-    <insert id="insert">
+
+    <!--
+        useGeneratedKeys + keyProperty: after the INSERT executes, MyBatis
+        reads the auto-generated primary from JDBC and writes it back
+        into the entity's `id` field. The service layer relies on this to
+        return a populated StudentVO + Location header from POST /students.
+    -->
+    <insert id="insert" useGeneratedKeys="true" keyColumn="id">
         INSERT INTO
         student(
             name,
@@ -34,6 +41,14 @@
             #{updateTime}
         )
     </insert>
+
+    <!--
+        Note: violation_count and violation_score are intentionally NOT
+        included in this update. They are mutated only via the dedicated
+        modifyViolationScoreSQL below, which is the single source of
+        write authority for violation tracking. This prevents a caller
+        from bypassing the violation-recording flow.
+    -->
     <update id="update">
         Update student
         <set>
@@ -46,13 +61,12 @@
             <if test="isCollege != null">is_college = #{isCollege},</if>
             <if test="address != null and address != ''">address = #{address},</if>
             <if test="graduationDate != null">graduation_date = #{graduationDate},</if>
-            <if test="violationCount != null">violation_count = #{violationCount},</if>
-            <if test="violationScore != null">violation_score = #{violationScore},</if>
             <if test="clazzId != null">clazz_id = #{clazzId},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
         </set>
         WHERE id = #{id}
     </update>
+
     <update id="modifyViolationScore">
         UPDATE student
         SET violation_score = violation_score + #{score}, violation_count = violation_count + 1
@@ -92,7 +106,8 @@
         </where>
         ORDER BY s.id
     </select>
-    <!-- 统计班级学员人数信息 -->
+
+    <!-- Statistics on the number of students in a class -->
     <select id="countStudentClazzData" resultType="java.util.Map">
         SELECT
         c.name AS clazz_name,
@@ -101,6 +116,8 @@
         GROUP BY s.clazz_id
         ORDER BY num;
     </select>
+
+    <!-- Statistics on student degree information -->
     <select id="countStudentDegreeData" resultType="java.util.Map">
         SELECT
         (CASE degree WHEN 1 THEN 'middle school'
