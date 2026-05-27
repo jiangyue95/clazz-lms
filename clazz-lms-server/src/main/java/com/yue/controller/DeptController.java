@@ -5,6 +5,8 @@ import com.yue.pojo.dto.DeptSaveDTO;
 import com.yue.pojo.dto.DeptUpdateDTO;
 import com.yue.pojo.vo.DeptVO;
 import com.yue.service.DeptService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,12 +26,12 @@ import java.util.List;
  * </p>
  * Dept: department
  */
+@Tag(name = "Departments", description = "Departments management")
 @Slf4j // log annotation
 @RestController // rest controller annotation
 @RequestMapping("/depts") // request mapping annotation: /depts
 @RequiredArgsConstructor
 public class DeptController {
-
     private final DeptService deptService;
 
     /**
@@ -37,6 +39,10 @@ public class DeptController {
      *
      * @return 200 OK with the list of departments (possibly empty)
      */
+    @Operation(
+            summary = "List all departments",
+            operationId = "listDepts"
+    )
     @GetMapping
     public ResponseEntity<List<DeptVO>> list() {
         log.info("Query all departments");
@@ -50,6 +56,10 @@ public class DeptController {
      * @param id department ID
      * @return 200 OK with department info; 404 if not found
      */
+    @Operation(
+            summary = "Get a department by id",
+            operationId = "getDept"
+    )
     @GetMapping("/{id}")
     public ResponseEntity<DeptVO> getInfo(@PathVariable Integer id) {
         log.info("Query department info by id：{}", id);
@@ -63,6 +73,10 @@ public class DeptController {
      * @param deptSaveDTO department creation payload
      * @return 201 Created with Location header pointing to the new resource
      */
+    @Operation(
+            summary = "Create a new department",
+            operationId = "createDept"
+    )
     @Log
     @PostMapping
     public ResponseEntity<DeptVO> add(@Valid @RequestBody DeptSaveDTO deptSaveDTO) {
@@ -85,6 +99,10 @@ public class DeptController {
      * @param deptUpdateDTO department update payload
      * @return 200 OK with the updated department; 404 if not found
      */
+    @Operation(
+            summary = "Update an existing department",
+            operationId = "updateDept"
+    )
     @Log
     @PutMapping("/{id}")
     public ResponseEntity<DeptVO> update(
@@ -99,11 +117,14 @@ public class DeptController {
      * Delete a department by id.
      *
      * @param id department id
-     * <p>
-     * 204 No Content on success
-     * 404 if not found
-     * 409 if the department still has employees
+     * @return 204 No Content on success;
+     *         404 if not found;
+     *         409 if the department still has employees
      */
+    @Operation(
+            summary = "Delete a department by id",
+            operationId = "deleteDept"
+    )
     @Log
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteDeptById(@PathVariable Integer id) {

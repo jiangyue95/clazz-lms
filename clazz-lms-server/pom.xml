@@ -74,6 +74,13 @@
             <groupId>com.aliyun.oss</groupId>
             <artifactId>aliyun-sdk-oss</artifactId>
         </dependency>
+
+        <!-- springdoc-openapi: scans @RestController and generates OpenAPI 3 spec -->
+        <!-- Expose /v3/api-docs (JSON) and /swagger-ui.html (interactive UI) -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        </dependency>
         <dependency>
             <groupId>jakarta.xml.bind</groupId>
             <artifactId>jakarta.xml.bind-api</artifactId>

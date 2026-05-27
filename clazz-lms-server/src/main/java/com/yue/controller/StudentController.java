@@ -8,13 +8,22 @@ import com.yue.pojo.dto.StudentUpdateDTO;
 import com.yue.pojo.StudentQueryParam;
 import com.yue.pojo.vo.StudentVO;
 import com.yue.service.StudentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * StudentController class
+ * Student REST controller.
+ *
+ * <p><b>Note:</b> This controller currently returns the legacy {@link Result}
+ * wrapper rather than DTOs directly, unlike the other controllers in this
+ * codebase. Migration to standard REST conventions is tracked in a seperate
+ * follow-up PR. OpenAPI annotations have been added here to document the
+ * current state; response schemas will improve once the wrapper is removed.
  */
+@Tag(name = "Students", description = "Student management")
 @Slf4j
 @RequestMapping("/students")
 @RestController
@@ -24,10 +33,15 @@ public class StudentController {
     private final StudentService studentService;
 
     /**
-     * query student list based on query params
+     * Query student list based on query params.
+     *
      * @param studentQueryParam query params
-     * @return
+     * @return Result wrapping a PageResult of StudentVO
      */
+    @Operation(
+            summary = "Page students with optional filters",
+            operationId = "pageStudents"
+    )
     @GetMapping
     public Result page(StudentQueryParam studentQueryParam) {
         log.info("Student list query：{}", studentQueryParam);
@@ -36,10 +50,15 @@ public class StudentController {
     }
 
     /**
-     * add new student
-     * @param studentSaveDTO student save dto object
-     * @return add result
+     * Add new student.
+     *
+     * @param studentSaveDTO student creation payload
+     * @return Result indicating success
      */
+    @Operation(
+            summary = "Create a new student",
+            operationId = "createStudent"
+    )
     @Log
     @PostMapping
     public Result save(@RequestBody StudentSaveDTO studentSaveDTO) {
@@ -49,10 +68,15 @@ public class StudentController {
     }
 
     /**
-     * query student by id
+     * Query a student by id.
+     *
      * @param id student id
-     * @return student vo
+     * @return Result wrapping the StudentVO
      */
+    @Operation(
+            summary = "Get a student by id",
+            operationId = "getStudent"
+    )
     @GetMapping("/{id}")
     public Result get(@PathVariable Integer id) {
         log.info("Query student by id：{}", id);
@@ -61,10 +85,22 @@ public class StudentController {
     }
 
     /**
-     * update student info
-     * @param studentUpdateDTO student update dto object
-     * @return update result object
+     * Update student information.
+     *
+     * <p>Note: The target student's id is taken from the request body
+     * {@code StudentUpdateDTO.id} rather than the URL path. A follow-up PR
+     * will migrate this to {@code PUT /students/{id}} for explicitness.
+     *
+     * @param studentUpdateDTO student update payload (id is inside the body)
+     * @return Result indicating success
      */
+    @Operation(
+            summary = "Update a student",
+            description = "Updates the student identified by `id` inside the " +
+                    "request body. This will be migrated to PUT /students/{id} " +
+                    "in a follow-up refactor.",
+            operationId = "updateStudent"
+    )
     @Log
     @PutMapping
     public Result modifyStudentInfo(@RequestBody StudentUpdateDTO studentUpdateDTO) {
@@ -74,10 +110,15 @@ public class StudentController {
     }
 
     /**
-     * delete student by id
+     * Delete a student by id.
+     *
      * @param id student id
-     * @return delete result object
+     * @return Result indicating success
      */
+    @Operation(
+            summary = "Delete a student by id",
+            operationId = "deleteStudent"
+    )
     @Log
     @DeleteMapping("/{id}")
     public Result delete(@PathVariable Integer id) {
@@ -87,11 +128,20 @@ public class StudentController {
     }
 
     /**
-     * violation score
+     * Record a violation score against a student.
+     *
      * @param id student id
-     * @param score violation score object
-     * @return violation result object
+     * @param score violation score to record
+     * @return Result indicating success
      */
+    @Operation(
+            summary = "Record a violation score for a student",
+            description = "Records `score` violation points against the student " +
+                    "identified by `id`. The score is passed as a URL path" +
+                    "segment; a follow-up refactor may move it to the request " +
+                    "body to better separate identification from payload.",
+            operationId = "updateStudentViolationScore"
+    )
     @Log
     @PutMapping("/violation/{id}/{score}")
     public Result modifyViolationScore(@PathVariable Integer id, @PathVariable Integer score) {
