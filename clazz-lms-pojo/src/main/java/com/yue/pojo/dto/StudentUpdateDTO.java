@@ -8,7 +8,12 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
 /**
- * student update data transfer object (DTO)
+ * Student update payload.
+ *
+ * <p>Does not carry an {@code id} field: the target student is identified by
+ * the URL path ({@code PUT /students/{id}}), which is authoritative. Keeping
+ * the id out of the body removes any ambiguity between a path id and a body id.
+ * === The id field will be removed in commit 4. ===
  */
 @AllArgsConstructor
 @Builder
