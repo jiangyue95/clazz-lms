@@ -2,48 +2,71 @@ package com.yue.service.impl;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.yue.exception.ResourceNotFoundException;
 import com.yue.mapper.StudentMapper;
 import com.yue.pojo.PageResult;
+import com.yue.pojo.StudentQueryParam;
 import com.yue.pojo.dto.StudentSaveDTO;
 import com.yue.pojo.dto.StudentUpdateDTO;
 import com.yue.pojo.entity.Student;
-import com.yue.pojo.StudentQueryParam;
 import com.yue.pojo.vo.StudentVO;
 import com.yue.service.StudentService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * StudentService implementation.
+ *
+ * <p>Existence is enforced at the service layer; any method operating on a
+ * specific student verifies the student exists (via affected-rows check on
+ * writes, or null-check on reads) and throws {@link ResourceNotFoundException}
+ * if not. This keeps 404 handling out of every controller and in a single
+ * layer, mapped centrally by {@code GlobalExceptionHandler}.
+ */
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class StudentServiceImpl implements StudentService {
 
-    @Autowired
-    private StudentMapper studentMapper;
+    private final StudentMapper studentMapper;
 
     /**
-     * Get student list based on query params
-     * @param studentQueryParam query params
-     * @return PageResult<StudentVO>
+     * Page-query the student list with optional filters.
+     *
+     * @param studentQueryParam filter and pagination parameters
+     * @return a paged result of students (possibly empty, never {@code null})
      */
     @Override
     public PageResult<StudentVO> page(StudentQueryParam studentQueryParam) {
-        // 1. set pagination params using PageHelper
+        // PageHelper intercepts the very next MyBatis query on this thread
+        // and applies LIMIT/OFFSET, then exposes total count via the Page wrapper.
         PageHelper.startPage(studentQueryParam.getPage(), studentQueryParam.getPageSize());
-        // 2. execute query
         List<StudentVO> studentList = studentMapper.list(studentQueryParam);
-        // 3. parse query result and wrap it in PageResult
         Page<StudentVO> p = (Page<StudentVO>) studentList;
         return new PageResult<>(p.getTotal(), p.getResult());
     }
 
     /**
-     * Add new student
-     * @param studentSaveDTO a StudentSaveDTO object
+     * Create a new student.
+     *
+     * <p> The generated primary key is back-filled into the entity by MyBatis
+     * ({@code useGenerateKeys}), after which the full VO is re-fetched so the
+     * caller receives exactly what was persisted (including any DB-defaulted
+     * fields).
+     *
+     * @param studentSaveDTO student creation payload
+     * @return the newly created student
      */
     @Override
-    public void add(StudentSaveDTO studentSaveDTO) {
+    @Transactional
+    public StudentVO add(StudentSaveDTO studentSaveDTO) {
+        // Capture a single timestamp so createTime and updateTime are identical.
+        LocalDateTime now = LocalDateTime.now();
         Student student = Student.builder()
                 .name(studentSaveDTO.getName())
                 .no(studentSaveDTO.getNo())
@@ -55,31 +78,49 @@ public class StudentServiceImpl implements StudentService {
                 .isCollege(studentSaveDTO.getIsCollege())
                 .graduationDate(studentSaveDTO.getGraduationDate())
                 .clazzId(studentSaveDTO.getClazzId())
-                .createTime(LocalDateTime.now())
-                .updateTime(LocalDateTime.now())
+                .createTime(now)
+                .updateTime(now)
                 .build();
         studentMapper.insert(student);
+        // After insert, student.id is populated by MyBatis (useGeneratedKeys).
+        // We re-fetch via getStudentById so the returned VO includes joined
+        // fields (e.g., clazz_name from the LEFT JOIN in list query - not
+        // currently fetched by this getter, but safe path for future enrichment).
+        return studentMapper.getStudentById(student.getId());
     }
 
     /**
-     * 将传入的 id 传给 mapper 层
-     * @param id 传入的 id
-     * @return StudentVO 对象
+     * Look up a single student by id.
+     *
+     * @param id student id
+     * @return the matching student
+     * @throws ResourceNotFoundException if no student with the given id exists
      */
     @Override
     public StudentVO getStudentById(Integer id) {
         StudentVO studentVO = studentMapper.getStudentById(id);
+        if (studentVO == null) {
+            throw new ResourceNotFoundException("Student with id " + id + " not found");
+        }
         return studentVO;
     }
 
     /**
-     * modify student info
-     * @param studentUpdateDTO student info dto
+     * Update an existing student's information.
+     *
+     * <p>The {@code id} argument is authoritative; any id carried inside the
+     * DTO is ignored. THe mapper's affected-row count is checked to detect a
+     * non-existent target.
+     *
+     * @param id student id (from the URL path)
+     * @param studentUpdateDTO update payload
+     * @throws ResourceNotFoundException if no student with the given id exists
      */
     @Override
-    public void modifyStudentInfo(StudentUpdateDTO studentUpdateDTO) {
+    @Transactional
+    public StudentVO modifyStudentInfo(Integer id, StudentUpdateDTO studentUpdateDTO) {
         Student student = Student.builder()
-                .id(studentUpdateDTO.getId())
+                .id(id)
                 .name(studentUpdateDTO.getName())
                 .no(studentUpdateDTO.getNo())
                 .gender(studentUpdateDTO.getGender())
@@ -92,25 +133,50 @@ public class StudentServiceImpl implements StudentService {
                 .clazzId(studentUpdateDTO.getClazzId())
                 .updateTime(LocalDateTime.now())
                 .build();
-        studentMapper.update(student);
+        int affected = studentMapper.update(student);
+        if (affected == 0) {
+            throw new ResourceNotFoundException("Student with id " + id + " not found");
+        }
+        return studentMapper.getStudentById(id);
     }
 
     /**
-     * 根据传入的 id 删除已存在的 student
-     * @param id 删除的 id
+     * Delete a student by id.
+     *
+     * <p>Strict semantics: deleting a non-existing student is treated as an
+     * error(404), not a silent no-op.
+     *
+     * @param id student id
+     * @throws ResourceNotFoundException if no student with the given id exists
      */
     @Override
+    @Transactional
     public void delete(Integer id) {
-        studentMapper.deleteById(id);
+        int affected = studentMapper.deleteById(id);
+        if (affected == 0) {
+            throw new ResourceNotFoundException("Student with id " + id + " not found");
+        }
     }
 
     /**
-     * 根据传入的 id 和 score 修改已存在的 student 的 violation_score
-     * @param id 修改的 id
-     * @param score 修改的 score
+     * Record a violation against a student
+     *
+     * <p>Atomically increments {@code violation_score} by {@code socore} and
+     * {@code violation_count} by one in a single SQL statement. Additive, not
+     * a replacement.
+     *
+     * @param studentId student id
+     * @param score violation points to add
+     * @return the updated student, reflecting the new score and count
+     * @throws ResourceNotFoundException if no student with the given id exists
      */
     @Override
-    public void modifyViolationScore(Integer id, Integer score) {
-        studentMapper.modifyViolationScore(id, score);
+    @Transactional
+    public StudentVO recordViolation(Integer studentId, Integer score) {
+        int affected = studentMapper.modifyViolationScore(studentId, score);
+        if (affected == 0) {
+            throw new ResourceNotFoundException("Student with id " + studentId + " not found");
+        }
+        return studentMapper.getStudentById(studentId);
     }
 }

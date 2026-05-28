@@ -63,8 +63,8 @@ public class StudentController {
     @PostMapping
     public Result save(@RequestBody StudentSaveDTO studentSaveDTO) {
         log.info("Add new student：{}", studentSaveDTO);
-        studentService.add(studentSaveDTO);
-        return Result.success();
+        StudentVO created = studentService.add(studentSaveDTO);
+        return Result.success(created);
     }
 
     /**
@@ -105,8 +105,9 @@ public class StudentController {
     @PutMapping
     public Result modifyStudentInfo(@RequestBody StudentUpdateDTO studentUpdateDTO) {
         log.info("Update student info：{}", studentUpdateDTO);
-        studentService.modifyStudentInfo(studentUpdateDTO);
-        return Result.success();
+        StudentVO updated = studentService.modifyStudentInfo(
+                studentUpdateDTO.getId(), studentUpdateDTO);
+        return Result.success(updated);
     }
 
     /**
@@ -146,7 +147,7 @@ public class StudentController {
     @PutMapping("/violation/{id}/{score}")
     public Result modifyViolationScore(@PathVariable Integer id, @PathVariable Integer score) {
         log.info("Violation operation: {}, {}", id, score);
-        studentService.modifyViolationScore(id, score);
-        return Result.success();
+        StudentVO updated = studentService.recordViolation(id, score);
+        return Result.success(updated);
     }
 }
