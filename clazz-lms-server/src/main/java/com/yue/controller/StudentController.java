@@ -2,26 +2,32 @@ package com.yue.controller;
 
 import com.yue.anno.Log;
 import com.yue.pojo.PageResult;
-import com.yue.pojo.Result;
+import com.yue.pojo.StudentQueryParam;
 import com.yue.pojo.dto.StudentSaveDTO;
 import com.yue.pojo.dto.StudentUpdateDTO;
-import com.yue.pojo.StudentQueryParam;
+import com.yue.pojo.dto.ViolationDTO;
 import com.yue.pojo.vo.StudentVO;
 import com.yue.service.StudentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
 
 /**
  * Student REST controller.
  *
- * <p><b>Note:</b> This controller currently returns the legacy {@link Result}
- * wrapper rather than DTOs directly, unlike the other controllers in this
- * codebase. Migration to standard REST conventions is tracked in a seperate
- * follow-up PR. OpenAPI annotations have been added here to document the
- * current state; response schemas will improve once the wrapper is removed.
+ * <p>Follows REST conventions: return DTOs directly via {@link ResponseEntity},
+ * uses HTTP status codes for errors (delegated to GlobalExceptionHandler), and
+ * leverages proper HTTP semantics (201 Created for POST, 204 No Content for
+ * DELETE). The legacy {@code Result} wrapper has been removed in favour of
+ * standard status-code-driven response, bringing this controller in line with
+ * the rest of the codebase.
  */
 @Tag(name = "Students", description = "Student management")
 @Slf4j
@@ -33,27 +39,27 @@ public class StudentController {
     private final StudentService studentService;
 
     /**
-     * Query student list based on query params.
+     * Page-query students with optional filters.
      *
-     * @param studentQueryParam query params
-     * @return Result wrapping a PageResult of StudentVO
+     * @param studentQueryParam filter and pagination params
+     * @return 200 OK with the paged result (possibly empty)
      */
     @Operation(
             summary = "Page students with optional filters",
             operationId = "pageStudents"
     )
     @GetMapping
-    public Result page(StudentQueryParam studentQueryParam) {
-        log.info("Student list query：{}", studentQueryParam);
+    public ResponseEntity<PageResult<StudentVO>> page(StudentQueryParam studentQueryParam) {
+        log.info("Student list query:{}", studentQueryParam);
         PageResult<StudentVO> pageResult = studentService.page(studentQueryParam);
-        return Result.success(pageResult);
+        return ResponseEntity.ok(pageResult);
     }
 
     /**
-     * Add new student.
+     * Create a new student.
      *
      * @param studentSaveDTO student creation payload
-     * @return Result indicating success
+     * @return 201 Created with the new resource and a Location header pointing to it
      */
     @Operation(
             summary = "Create a new student",
@@ -61,60 +67,61 @@ public class StudentController {
     )
     @Log
     @PostMapping
-    public Result save(@RequestBody StudentSaveDTO studentSaveDTO) {
-        log.info("Add new student：{}", studentSaveDTO);
+    public ResponseEntity<StudentVO> save(@Valid @RequestBody StudentSaveDTO studentSaveDTO) {
+        log.info("Add new student:{}", studentSaveDTO);
         StudentVO created = studentService.add(studentSaveDTO);
-        return Result.success(created);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(created.getId())
+                .toUri();
+        return ResponseEntity.created(location).body(created);
     }
 
     /**
-     * Query a student by id.
+     * Get a student by id.
      *
      * @param id student id
-     * @return Result wrapping the StudentVO
+     * @return 200 OK with the student; 404 if not found (handled centrally)
      */
     @Operation(
             summary = "Get a student by id",
             operationId = "getStudent"
     )
     @GetMapping("/{id}")
-    public Result get(@PathVariable Integer id) {
-        log.info("Query student by id：{}", id);
+    public ResponseEntity<StudentVO> get(@PathVariable Integer id) {
+        log.info("Query student by id:{}", id);
         StudentVO studentVO = studentService.getStudentById(id);
-        return Result.success(studentVO);
+        return ResponseEntity.ok(studentVO);
     }
 
     /**
-     * Update student information.
+     * Update an existing student.
      *
-     * <p>Note: The target student's id is taken from the request body
-     * {@code StudentUpdateDTO.id} rather than the URL path. A follow-up PR
-     * will migrate this to {@code PUT /students/{id}} for explicitness.
-     *
-     * @param studentUpdateDTO student update payload (id is inside the body)
-     * @return Result indicating success
+     * @param id student id (from URL, authoritative)
+     * @param studentUpdateDTO student update payload
+     * @return 200 OK with the updated student; 404 if not found
      */
     @Operation(
-            summary = "Update a student",
-            description = "Updates the student identified by `id` inside the " +
-                    "request body. This will be migrated to PUT /students/{id} " +
-                    "in a follow-up refactor.",
+            summary = "Update a student by id",
             operationId = "updateStudent"
     )
     @Log
-    @PutMapping
-    public Result modifyStudentInfo(@RequestBody StudentUpdateDTO studentUpdateDTO) {
-        log.info("Update student info：{}", studentUpdateDTO);
-        StudentVO updated = studentService.modifyStudentInfo(
-                studentUpdateDTO.getId(), studentUpdateDTO);
-        return Result.success(updated);
+    @PutMapping("/{id}")
+    public ResponseEntity<StudentVO> modifyStudentInfo(
+            @PathVariable Integer id,
+            @Valid @RequestBody StudentUpdateDTO studentUpdateDTO) {
+        log.info("Update student id={}, payload={}", id, studentUpdateDTO);
+        StudentVO updated = studentService.modifyStudentInfo(id, studentUpdateDTO);
+        return ResponseEntity.ok(updated);
     }
 
     /**
      * Delete a student by id.
      *
      * @param id student id
-     * @return Result indicating success
+     * @return 204 No Content on success; 404 if not found
      */
     @Operation(
             summary = "Delete a student by id",
@@ -122,32 +129,38 @@ public class StudentController {
     )
     @Log
     @DeleteMapping("/{id}")
-    public Result delete(@PathVariable Integer id) {
-        log.info("Delete student by id：{}", id);
+    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+        log.info("Delete student by id:{}", id);
         studentService.delete(id);
-        return Result.success();
+        return ResponseEntity.noContent().build();
     }
 
     /**
-     * Record a violation score against a student.
+     * Record a violation against a student.
+     *
+     * <p>Each call adds {@code score} points to the student's running total
+     * and increments their violation count by one. Modelled as creating a new
+     * violation record under the student resource, hence POST (non-idempotent)
+     * rather than PUT.
      *
      * @param id student id
-     * @param score violation score to record
-     * @return Result indicating success
+     * @param violationDTO payload carrying the violation score
+     * @return 200 OK with the updated student (new score and count); 404 if not found
      */
     @Operation(
-            summary = "Record a violation score for a student",
-            description = "Records `score` violation points against the student " +
-                    "identified by `id`. The score is passed as a URL path" +
-                    "segment; a follow-up refactor may move it to the request " +
-                    "body to better separate identification from payload.",
-            operationId = "updateStudentViolationScore"
+            summary = "Record a violation for a student",
+            description = "Adds the given violation score to the student's " +
+                    "running total and increments their violation count. " +
+                    "Additive: each call records a new violation.",
+            operationId = "recordStudentViolation"
     )
     @Log
-    @PutMapping("/violation/{id}/{score}")
-    public Result modifyViolationScore(@PathVariable Integer id, @PathVariable Integer score) {
-        log.info("Violation operation: {}, {}", id, score);
-        StudentVO updated = studentService.recordViolation(id, score);
-        return Result.success(updated);
+    @PostMapping("/{id}/violations")
+    public ResponseEntity<StudentVO> recordViolation(
+            @PathVariable Integer id,
+            @Valid @RequestBody ViolationDTO violationDTO) {
+        log.info("Record violation for student id={}, score={}", id, violationDTO.getScore());
+        StudentVO updated = studentService.recordViolation(id, violationDTO.getScore());
+        return ResponseEntity.ok(updated);
     }
 }

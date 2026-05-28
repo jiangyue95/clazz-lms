@@ -10,7 +10,7 @@
         into the entity's `id` field. The service layer relies on this to
         return a populated StudentVO + Location header from POST /students.
     -->
-    <insert id="insert" useGeneratedKeys="true" keyColumn="id">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO
         student(
             name,
