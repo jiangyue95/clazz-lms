@@ -7,46 +7,70 @@ import com.yue.pojo.StudentQueryParam;
 import com.yue.pojo.vo.StudentVO;
 
 /**
- * StudentService interface
+ * StudentService interface.
+ *
+ * <p>Methods that operate on a specific student (get / update / delete /
+ * recordViolation) throw {@link com.yue.exception.ResourceNotFoundException}
+ * if no student with the given id exists. The exception is centrally mapped
+ * to HTTP 404 by {@code GlobalExceptionHandler}, so controllers don't need
+ * special handling.
  */
 public interface StudentService {
 
     /**
-     * Get student list based on query params
-     * @param studentQueryParam query params
-     * @return PageResult<StudentVO>
+     * Page-query student list.
+     *
+     * @param studentQueryParam query params (filters + pagination)
+     * @return paged result (possibly empty, never null)
      */
     PageResult<StudentVO> page(StudentQueryParam studentQueryParam);
 
     /**
-     * Add new student
-     * @param studentSaveDTO a StudentSaveDTO object
+     * Create a new student.
+     *
+     * @param studentSaveDTO student creation payload
+     * @return the created student (id populated by the database)
      */
-    void add(StudentSaveDTO studentSaveDTO);
+    StudentVO add(StudentSaveDTO studentSaveDTO);
 
     /**
-     * Get student by id
+     * Look up a student by id.
+     *
      * @param id student id
-     * @return StudentVO object
+     * @return the student VO
+     * @throws com.yue.exception.ResourceNotFoundException if no student with that id
      */
     StudentVO getStudentById(Integer id);
 
     /**
-     * modify student info
-     * @param studentUpdateDTO student info dto
+     * Update an existing student.
+     *
+     * <p>The {@code id} parameter is authoritative; if the DTO carries an
+     * {@code id} field it is ignored.
+     *
+     * @param id student id (from URL path)
+     * @param studentUpdateDTO update payload
+     * @return the updated student
+     * @throws com.yue.exception.ResourceNotFoundException if no student with that id
      */
-    void modifyStudentInfo(StudentUpdateDTO studentUpdateDTO);
+    StudentVO modifyStudentInfo(Integer id, StudentUpdateDTO studentUpdateDTO);
 
     /**
-     * delete student by id
-     * @param id student id to delete
+     * Delete a student by id.
+     *
+     * @param id student id
+     * @throws com.yue.exception.ResourceNotFoundException if no student with that id
      */
     void delete(Integer id);
 
     /**
-     * modify student violation score
-     * @param id student id
-     * @param score violation score to modify
+     * Record a violation against a student. Increments {@code violation_score}
+     * by the given amount and {@code violation_count} by 1, automatically.
+     *
+     * @param studentId student id
+     * @param score violation score to add (must be positive)
+     * @return the updated student (with new score and count)
+     * @throws com.yue.exception.ResourceNotFoundException if no student with that id
      */
-    void modifyViolationScore(Integer id, Integer score);
+    StudentVO recordViolation(Integer studentId, Integer score);
 }
