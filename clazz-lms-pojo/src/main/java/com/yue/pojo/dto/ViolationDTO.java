@@ -1,5 +1,6 @@
 package com.yue.pojo.dto;
 
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,7 +23,7 @@ public class ViolationDTO {
 
     /**
      * Violation points to add to the student's running total. Must be positive.
-     * (Bean Validation constraints will be added in dedicated follow-up PR.)
      */
+    @Positive(message = "Violation score must be positive")
     private Integer score;
 }
