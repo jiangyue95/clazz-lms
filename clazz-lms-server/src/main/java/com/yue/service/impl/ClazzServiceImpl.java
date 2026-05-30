@@ -9,7 +9,7 @@ import com.yue.mapper.StudentMapper;
 import com.yue.pojo.dto.ClazzSaveDTO;
 import com.yue.pojo.dto.ClazzUpdateDTO;
 import com.yue.pojo.entity.Clazz;
-import com.yue.pojo.ClazzQueryParam;
+import com.yue.pojo.dto.ClazzQueryParam;
 
 import com.yue.pojo.PageResult;
 import com.yue.pojo.vo.ClazzVO;

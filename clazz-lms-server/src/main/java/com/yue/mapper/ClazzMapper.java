@@ -1,7 +1,7 @@
 package com.yue.mapper;
 
 import com.yue.pojo.entity.Clazz;
-import com.yue.pojo.ClazzQueryParam;
+import com.yue.pojo.dto.ClazzQueryParam;
 import com.yue.pojo.vo.ClazzVO;
 import org.apache.ibatis.annotations.*;
 

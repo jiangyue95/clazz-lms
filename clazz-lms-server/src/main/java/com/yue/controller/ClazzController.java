@@ -3,7 +3,7 @@ package com.yue.controller;
 import com.yue.anno.Log;
 import com.yue.pojo.dto.ClazzSaveDTO;
 import com.yue.pojo.dto.ClazzUpdateDTO;
-import com.yue.pojo.ClazzQueryParam;
+import com.yue.pojo.dto.ClazzQueryParam;
 import com.yue.pojo.PageResult;
 import com.yue.pojo.vo.ClazzVO;
 import com.yue.service.ClazzService;
