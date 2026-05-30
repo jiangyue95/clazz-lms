@@ -30,8 +30,6 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class EmpExprDTO {
 
-    private Integer empId;
-
     @NotNull(message = "Begin date is required")
     private LocalDate begin;
 

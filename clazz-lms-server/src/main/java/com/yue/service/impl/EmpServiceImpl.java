@@ -5,6 +5,7 @@ import com.github.pagehelper.PageHelper;
 import com.yue.exception.*;
 import com.yue.mapper.EmpExprMapper;
 import com.yue.mapper.EmpMapper;
+import com.yue.pojo.PageResult;
 import com.yue.pojo.dto.*;
 import com.yue.pojo.entity.Emp;
 import com.yue.pojo.entity.EmpExpr;
@@ -19,7 +20,6 @@ import com.yue.security.JwtConfigProperties;
 import com.yue.service.EmpLogService;
 import com.yue.service.EmpService;
 import com.yue.security.JwtService;
-import com.yue.pojo.*;
 import com.yue.utils.HashUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -98,18 +98,24 @@ public class EmpServiceImpl implements EmpService {
             empMapper.insert(emp);
 
             // 2. save employee work experience
-            List<EmpExprDTO> exprList = empSaveDTO.getExprList();
-            if  (!CollectionUtils.isEmpty(exprList)) {
-                exprList.forEach(empExpr -> {
-                    empExpr.setEmpId(emp.getId());
-                });
-                empExprMapper.insertBatch(exprList);
+            List<EmpExprDTO> exprDtoList = empSaveDTO.getExprList();
+            if  (!CollectionUtils.isEmpty(exprDtoList)) {
+                List<EmpExpr> exprEntityList = exprDtoList.stream()
+                                .map(dto -> EmpExpr.builder()
+                                        .empId(emp.getId())
+                                        .begin(dto.getBegin())
+                                        .end(dto.getEnd())
+                                        .company(dto.getCompany())
+                                        .job(dto.getJob())
+                                        .build())
+                                .toList();
+                empExprMapper.insertBatch(exprEntityList);
             }
         }finally {
             // 3. record operation log in database
             EmpLog empLog = EmpLog.builder()
                     .operateTime(LocalDateTime.now())
-                    .info("Add new employee：" + empSaveDTO.toString())
+                    .info("Add new employee: " + empSaveDTO)
                     .build();
             empLogService.insert(empLog);
         }
@@ -196,10 +202,18 @@ public class EmpServiceImpl implements EmpService {
         empExprMapper.deleteByEmpIds(Arrays.asList(id));
 
         // 4. insert new work experience into database
-        List<EmpExprDTO> exprList = empUpdateDTO.getExprList();
-        if (!CollectionUtils.isEmpty(exprList)) {
-            exprList.forEach(empExpr -> empExpr.setEmpId(id));
-            empExprMapper.insertBatch(exprList);
+        List<EmpExprDTO> exprDtoList = empUpdateDTO.getExprList();
+        if (!CollectionUtils.isEmpty(exprDtoList)) {
+            List<EmpExpr> exprEntityList = exprDtoList.stream()
+                            .map(dto -> EmpExpr.builder()
+                                    .empId(emp.getId())
+                                    .begin(dto.getBegin())
+                                    .end(dto.getEnd())
+                                    .company(dto.getCompany())
+                                    .job(dto.getJob())
+                                    .build())
+                            .toList();
+            empExprMapper.insertBatch(exprEntityList);
         }
 
         // 5. return the updated employee

@@ -1,6 +1,5 @@
 package com.yue.mapper;
 
-import com.yue.pojo.dto.EmpExprDTO;
 import com.yue.pojo.entity.EmpExpr;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -13,7 +12,7 @@ public interface EmpExprMapper {
      * Batch insert employee work experience
      * @param exprList a list of employee work experience entity
      */
-    void insertBatch(List<EmpExprDTO> exprList);
+    void insertBatch(List<EmpExpr> exprList);
 
     /**
      * Batch delete employee work experience
