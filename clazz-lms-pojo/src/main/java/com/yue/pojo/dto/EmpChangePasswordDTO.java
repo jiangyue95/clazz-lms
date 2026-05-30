@@ -31,7 +31,7 @@ public class EmpChangePasswordDTO {
     @Size(max = 100, message = "Current password must not exceed {max} characters")
     private String currentPassword;
 
-    @NotBlank(message = "New password must not be blank")
-    @Size(min = 8, max = 100, message = "New password must be between {min} and {max} characters")
+    @NotBlank(message = "New password is be required")
+    @Size(min = 8, max = 100, message = "New password must be between {min} to {max} characters")
     private String newPassword;
 }
