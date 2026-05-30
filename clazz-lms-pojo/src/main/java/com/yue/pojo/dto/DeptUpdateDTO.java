@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
  * body field name {@code id} would be silently ignored by the controller.
  * <p>
  * Validation constraints mirror {@link DeptSaveDTO}: name must be non-blank
- * and 2-50 characters. They're declared explicitly here rather than inherited
+ * and 2-10 characters. They're declared explicitly here rather than inherited
  * to keep the contract self-documenting and to allow divergence in the future.
  */
 @AllArgsConstructor
@@ -25,6 +25,6 @@ import lombok.NoArgsConstructor;
 public class DeptUpdateDTO {
 
     @NotBlank(message = "Department name must not be blank")
-    @Size(min = 2, max = 50, message = "Department name must be between 2 and 50 characters")
+    @Size(min = 2, max = 10, message = "Department name must be between {min} and {max} characters")
     private String name;
 }

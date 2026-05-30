@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
  * Validation constraints:
  * <ul>
  *     <li>{@code name} must not be blank - rejects null, empty, and whitespace-only strings</li>
- *     <li>{@code name} length must be between 2 and 50 characters.</li>
+ *     <li>{@code name} length must be between 2 and 10 characters.</li>
  * </ul>
  * Validation is triggered when the controller method parameter is annotated with {@code @Valid}.
  */
@@ -24,6 +24,6 @@ import lombok.NoArgsConstructor;
 public class DeptSaveDTO {
 
     @NotBlank(message = "Department name must not be blank")
-    @Size(min = 2, max = 50, message = "Department name must be between 2 and 50 characters")
+    @Size(min = 2, max = 10, message = "Department name must be between {min} and {max} characters")
     private String name;
 }
