@@ -21,11 +21,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class EmpLoginDTO {
 
-    @NotBlank(message = "username must not be blank")
-    @Size(max = 20, message = "username must not exceed 50")
+    @NotBlank(message = "Username must not be blank")
+    @Size(max = 20, message = "Username must not exceed 50")
     private String username;
 
-    @NotBlank(message = "password must not be blank")
-    @Size(min = 1, max = 32, message = "password length must be between 1 and 32")
+    @NotBlank(message = "Password must not be blank")
+    @Size(min = 1, max = 32, message = "Password length must be between 1 and 32")
     private String password;
 }

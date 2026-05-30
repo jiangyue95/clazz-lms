@@ -10,6 +10,7 @@ import com.yue.pojo.vo.EmpVO;
 import com.yue.service.EmpService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -53,8 +54,8 @@ public class EmpController {
             operationId = "pageEmps"
     )
     @GetMapping
-    public ResponseEntity<PageResult<EmpVO>> page(EmpListQueryDTO empListQueryDTO){
-        log.info("Pagination Search：{}", empListQueryDTO);
+    public ResponseEntity<PageResult<EmpVO>> page(@Valid EmpListQueryDTO empListQueryDTO){
+        log.info("Pagination Search: {}", empListQueryDTO);
         PageResult<EmpVO> pageResult = empService.page(empListQueryDTO);
         return ResponseEntity.ok(pageResult);
     }
@@ -71,8 +72,8 @@ public class EmpController {
     )
     @Log
     @PostMapping
-    public ResponseEntity<EmpInfoVO> save(@RequestBody EmpSaveDTO empSaveDTO) throws Exception {
-        log.info("Add employee：{}", empSaveDTO);
+    public ResponseEntity<EmpInfoVO> save(@Valid @RequestBody EmpSaveDTO empSaveDTO) throws Exception {
+        log.info("Add employee: {}", empSaveDTO);
         EmpInfoVO created = empService.save(empSaveDTO);
 
         URI location = ServletUriComponentsBuilder
@@ -100,7 +101,7 @@ public class EmpController {
     @Log
     @DeleteMapping
     public ResponseEntity<Void> delete(@RequestParam List<Integer> ids) {
-        log.info("Delete parameter：{}", ids);
+        log.info("Delete parameter: {}", ids);
         empService.delete(ids);
         return ResponseEntity.noContent().build();
     }
@@ -121,7 +122,7 @@ public class EmpController {
     )
     @GetMapping("/{id}")
     public ResponseEntity<EmpInfoVO> getInfo(@PathVariable Integer id) {
-        log.info("Get employee info by id：{}", id);
+        log.info("Get employee info by id: {}", id);
         EmpInfoVO empInfoVO = empService.getInfo(id);
         return ResponseEntity.ok(empInfoVO);
     }
@@ -141,7 +142,7 @@ public class EmpController {
     @PutMapping("/{id}")
     public ResponseEntity<EmpInfoVO> update(
             @PathVariable Integer id,
-            @RequestBody EmpUpdateDTO empUpdateDTO) {
+            @Valid @RequestBody EmpUpdateDTO empUpdateDTO) {
         log.info("Update employee id={}, payload={}", id, empUpdateDTO);
         EmpInfoVO updated = empService.update(id, empUpdateDTO);
         return ResponseEntity.ok(updated);

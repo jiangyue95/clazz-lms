@@ -98,7 +98,7 @@ public class EmpServiceImpl implements EmpService {
             empMapper.insert(emp);
 
             // 2. save employee work experience
-            List<EmpExpr> exprList = empSaveDTO.getExprList();
+            List<EmpExprDTO> exprList = empSaveDTO.getExprList();
             if  (!CollectionUtils.isEmpty(exprList)) {
                 exprList.forEach(empExpr -> {
                     empExpr.setEmpId(emp.getId());
@@ -196,7 +196,7 @@ public class EmpServiceImpl implements EmpService {
         empExprMapper.deleteByEmpIds(Arrays.asList(id));
 
         // 4. insert new work experience into database
-        List<EmpExpr> exprList = empUpdateDTO.getExprList();
+        List<EmpExprDTO> exprList = empUpdateDTO.getExprList();
         if (!CollectionUtils.isEmpty(exprList)) {
             exprList.forEach(empExpr -> empExpr.setEmpId(id));
             empExprMapper.insertBatch(exprList);
