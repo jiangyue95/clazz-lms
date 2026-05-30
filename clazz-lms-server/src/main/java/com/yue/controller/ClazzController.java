@@ -9,6 +9,7 @@ import com.yue.pojo.vo.ClazzVO;
 import com.yue.service.ClazzService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -67,8 +68,8 @@ public class ClazzController {
     )
     @Log
     @PostMapping
-    public ResponseEntity<ClazzVO> save(@RequestBody ClazzSaveDTO clazzSaveDTO) {
-        log.info("Add new clazz(class)：{}", clazzSaveDTO);
+    public ResponseEntity<ClazzVO> save(@Valid @RequestBody ClazzSaveDTO clazzSaveDTO) {
+        log.info("Add new clazz(class): {}", clazzSaveDTO);
         ClazzVO created = clazzService.save(clazzSaveDTO);
 
         URI location = ServletUriComponentsBuilder
@@ -91,7 +92,7 @@ public class ClazzController {
     )
     @GetMapping("/{id}")
     public ResponseEntity<ClazzVO> getClazzById(@PathVariable Integer id) {
-        log.info("Query clazz(class) by id：{}", id);
+        log.info("Query clazz(class) by id: {}", id);
         ClazzVO clazzVO =  clazzService.getClassById(id);
         return ResponseEntity.ok(clazzVO);
     }
@@ -111,7 +112,7 @@ public class ClazzController {
     @PutMapping("/{id}")
     public ResponseEntity<ClazzVO> modifyClazz(
             @PathVariable Integer id,
-            @RequestBody ClazzUpdateDTO clazzUpdateDTO) {
+            @Valid @RequestBody ClazzUpdateDTO clazzUpdateDTO) {
         log.info("Update clazz(class) id={}, payload={}", id, clazzUpdateDTO);
         ClazzVO updated = clazzService.modifyClazz(id, clazzUpdateDTO);
         return ResponseEntity.ok(updated);
@@ -130,7 +131,7 @@ public class ClazzController {
     @Log
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> removeClazzById(@PathVariable Integer id){
-        log.info("Delete clazz(class) by id：{}", id);
+        log.info("Delete clazz(class) by id: {}", id);
         clazzService.deleteClazzById(id);
         return ResponseEntity.noContent().build();
     }
@@ -149,7 +150,7 @@ public class ClazzController {
     )
     @GetMapping("/list")
     public ResponseEntity<List<ClazzVO>> getAllClazzs() {
-        log.info("Query all clazz(class) list");
+        log.info("Query all clazz(class)");
         List<ClazzVO> clazzList = clazzService.getAllClazzs();
         return ResponseEntity.ok(clazzList);
     }
