@@ -20,6 +20,7 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 public class StudentUpdateDTO {
+
     @Size(min = 2, max = 10, message = "Student name must be {min} to {max} characters")
     private String name;
 
@@ -30,10 +31,13 @@ public class StudentUpdateDTO {
     @Max(value = 2, message = "Gender must be 1 or 2")
     private Integer gender;
 
-    @Size(max = 11, message = "Phone number must not exceed 11 numbers")
+    @Pattern(regexp = "\\d{11}", message = "Phone number must be 11 digits")
     private String phone;
 
-    @Size(max = 18, message = "id number must not exceed 18 numbers")
+    @Pattern(
+            regexp = "\\d{17}[\\dXx]",
+            message = "ID card must be 17 digits + 1 digit or X"
+    )
     private String idCard;
 
     @Size(max = 100, message = "Student's address must not exceed {max} numbers")
@@ -41,8 +45,8 @@ public class StudentUpdateDTO {
 
     private Integer degree;
 
-    @Min(value = 0, message = "Gender must be 0 or 1")
-    @Max(value = 1, message = "Gender must be 0 or 1")
+    @Min(value = 0, message = "isCollege must be 0 or 1")
+    @Max(value = 1, message = "isCollege must be 0 or 1")
     private Integer isCollege;
 
     private LocalDate graduationDate;

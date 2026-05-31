@@ -17,25 +17,28 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class StudentSaveDTO {
 
-    @NotBlank(message = "Student name cannot be blank")
+    @NotBlank(message = "Student name is required")
     @Size(min = 2, max = 10, message = "Student name must be {min} to {max} characters")
     private String name;
 
-    @NotNull(message = "Student number cannot be null")
+    @NotNull(message = "Student number is required")
     @Size(max = 10, message = "Student number cannot exceed 10 characters")
     private String no;
 
-    @NotNull(message = "Gender cannot be null")
+    @NotNull(message = "Student gender is required")
     @Min(value = 1, message = "Gender must be 1 or 2")
     @Max(value = 2, message = "Gender must be 1 or 2")
     private Integer gender;
 
     @NotBlank(message = "Phone number is required")
-    @Size(max = 11, message = "Phone number must not exceed 11 numbers")
+    @Pattern(regexp = "\\d{11}", message = "Phone number must be 11 digits")
     private String phone;
 
-    @NotBlank(message = "id number is required")
-    @Size(max = 18, message = "id number must not exceed 18 numbers")
+    @NotBlank(message = "ID card is required")
+    @Pattern(
+            regexp = "\\d{17}[\\dXx]",
+            message = "ID card must be 17 digits + 1 digit or X"
+    )
     private String idCard;
 
     @Size(max = 100, message = "Student's address must not exceed {max} numbers")
@@ -44,9 +47,9 @@ public class StudentSaveDTO {
 
     private Integer degree;
 
-    @NotNull(message = "Gender cannot be null")
-    @Min(value = 0, message = "Gender must be 0 or 1")
-    @Max(value = 1, message = "Gender must be 0 or 1")
+    @NotNull(message = "College status (isCollege) is required")
+    @Min(value = 0, message = "isCollege must be 0 or 1")
+    @Max(value = 1, message = "isCollege must be 0 or 1")
     private Integer isCollege;
 
     private LocalDate graduationDate;
