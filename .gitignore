@@ -45,3 +45,8 @@ data/
 
 # Claude
 .claude/
+
+# Qodana
+.qodana/
+qodana-report/
+qodana-results/
