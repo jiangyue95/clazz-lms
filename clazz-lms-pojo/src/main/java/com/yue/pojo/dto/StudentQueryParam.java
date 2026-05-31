@@ -1,4 +1,4 @@
-package com.yue.pojo;
+package com.yue.pojo.dto;
 
 import lombok.Data;
 

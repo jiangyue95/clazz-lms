@@ -2,7 +2,7 @@ package com.yue.controller;
 
 import com.yue.anno.Log;
 import com.yue.pojo.PageResult;
-import com.yue.pojo.StudentQueryParam;
+import com.yue.pojo.dto.StudentQueryParam;
 import com.yue.pojo.dto.StudentSaveDTO;
 import com.yue.pojo.dto.StudentUpdateDTO;
 import com.yue.pojo.dto.ViolationDTO;

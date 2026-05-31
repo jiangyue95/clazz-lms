@@ -5,7 +5,7 @@ import com.github.pagehelper.PageHelper;
 import com.yue.exception.ResourceNotFoundException;
 import com.yue.mapper.StudentMapper;
 import com.yue.pojo.PageResult;
-import com.yue.pojo.StudentQueryParam;
+import com.yue.pojo.dto.StudentQueryParam;
 import com.yue.pojo.dto.StudentSaveDTO;
 import com.yue.pojo.dto.StudentUpdateDTO;
 import com.yue.pojo.entity.Student;

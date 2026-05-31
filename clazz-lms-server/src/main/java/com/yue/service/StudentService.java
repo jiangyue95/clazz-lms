@@ -3,7 +3,7 @@ package com.yue.service;
 import com.yue.pojo.PageResult;
 import com.yue.pojo.dto.StudentSaveDTO;
 import com.yue.pojo.dto.StudentUpdateDTO;
-import com.yue.pojo.StudentQueryParam;
+import com.yue.pojo.dto.StudentQueryParam;
 import com.yue.pojo.vo.StudentVO;
 
 /**

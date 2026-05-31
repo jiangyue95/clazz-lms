@@ -1,7 +1,7 @@
 package com.yue.mapper;
 
 import com.yue.pojo.entity.Student;
-import com.yue.pojo.StudentQueryParam;
+import com.yue.pojo.dto.StudentQueryParam;
 import com.yue.pojo.vo.StudentVO;
 import org.apache.ibatis.annotations.*;
 

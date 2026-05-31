@@ -27,11 +27,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class EmpChangePasswordDTO {
 
-    @NotBlank(message = "currentPassword must not be blank")
-    @Size(min = 1, max = 100, message = "currentPassword must be between 1 and 100")
+    @NotBlank(message = "Current password is required")
+    @Size(max = 100, message = "Current password must not exceed {max} characters")
     private String currentPassword;
 
-    @NotBlank(message = "newPassword must not be blank")
-    @Size(min = 8, max = 100, message = "newPassword must be between 8 and 100")
+    @NotBlank(message = "New password is required")
+    @Size(min = 8, max = 100, message = "New password must be {min} to {max} characters")
     private String newPassword;
 }
