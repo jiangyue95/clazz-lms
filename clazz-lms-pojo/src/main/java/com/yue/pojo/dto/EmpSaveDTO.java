@@ -40,7 +40,7 @@ public class EmpSaveDTO {
     private Integer deptId;
 
     @NotBlank(message = "Phone number is required")
-    @Size(max = 11, message = "Phone number must not exceed 11 numbers")
+    @Pattern(regexp = "\\d{11}", message = "Phone number must be 11 digits")
     private String phone;
 
     @NotNull(message = "Entry date is required")

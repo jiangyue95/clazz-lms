@@ -1,10 +1,7 @@
 package com.yue.pojo.dto;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,7 +32,7 @@ public class EmpUpdateDTO {
     @Positive(message = "Department id must be a positive integer")
     private Integer deptId;
 
-    @Size(max = 11, message = "Phone number must not exceed 11 numbers")
+    @Pattern(regexp = "\\d{11}", message = "Phone number must be 11 digits")
     private String phone;
 
     private LocalDate entryDate;
