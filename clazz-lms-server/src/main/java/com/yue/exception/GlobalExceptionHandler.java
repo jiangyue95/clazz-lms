@@ -185,6 +185,49 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles database unique-constraint violations.
+     *
+     * <p>When a write reaches the database with a value that violates a unique
+     * constraint (e.g. creating a {@code dept} with a name that already exist),
+     * Spring translates the underlying SQL error into
+     * {@link org.springframework.dao.DuplicateKeyException}. Without this dedicated
+     * handler, the {@code Exception.class} catch-all would map it to HTTP 500 - but
+     * "you sent a value that conflicts with an existing resource" is a client
+     * problem, not a server failure. The correct status is 409 Conflict.
+     *
+     * <p>The external message is intentionally generic ("a duplicate value
+     * exists") rather than echoing the SQL exception text, which would leak
+     * schema details (table names, index names) to clients. Services that want
+     * a friendlier, field-specific message should catch
+     * {@link org.springframework.dao.DataIntegrityViolationException} themselves
+     * and rethrow as {@link BusinessRuleViolationException} - see
+     * {@code EmpServiceImpl.register} for the pattern. This handler is the
+     * safety net for code that doesn't.
+     *
+     * @param ex the duplicate-key exception thrown by Spring
+     * @param request current HTTP request (used to populate the path field)
+     * @return a 409 Conflict response with a generic duplicate-resource body
+     */
+    @ExceptionHandler(org.springframework.dao.DuplicateKeyException.class)
+    public ResponseEntity<ErrorResponseDTO> handleDuplicateKeyException(
+            org.springframework.dao.DuplicateKeyException ex,
+            HttpServletRequest request) {
+        // log at WARN, not ERROR - a duplicate-key collision is a client error,
+        // not a server failure. The underlying SQL message is logged for
+        // diagnostic purposes only and is NOT included in the response.
+        log.warn("Duplicate key violation at {}: {}", request.getRequestURI(), ex.getMessage());
+
+        ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(
+                "DUPLICATE_RESOURCE",
+                "A resource with the same unique value already exists",
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponseDTO);
+    }
+
+    /**
      * handle uncaught exception
      * @param ex an exception object
      * @param request current HTTP request object
