@@ -158,7 +158,7 @@ public class GlobalExceptionHandler {
      * an obvious bug, since "URL doesn't exist" is a client problem, not a
      * server error.
      *
-     * <p> The external message is intentionaly generic ("does not exist")
+     * <p> The external message is intentionally generic ("does not exist")
      * rather than echoing the requested path or framework details - this
      * avoids leaking implementation hints to malicious scanners.
      *
@@ -182,74 +182,6 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponseDTO);
-    }
-
-    /**
-     * Handles database unique-constraint violations.
-     *
-     * <p>When a write reaches the database with a value that violates a unique
-     * constraint (e.g. creating a {@code dept} with a name that already exist),
-     * Spring translates the underlying SQL error into
-     * {@link org.springframework.dao.DuplicateKeyException}. Without this dedicated
-     * handler, the {@code Exception.class} catch-all would map it to HTTP 500 - but
-     * "you sent a value that conflicts with an existing resource" is a client
-     * problem, not a server failure. The correct status is 409 Conflict.
-     *
-     * <p>The external message is intentionally generic ("a duplicate value
-     * exists") rather than echoing the SQL exception text, which would leak
-     * schema details (table names, index names) to clients. Services that want
-     * a friendlier, field-specific message should catch
-     * {@link org.springframework.dao.DataIntegrityViolationException} themselves
-     * and rethrow as {@link BusinessRuleViolationException} - see
-     * {@code EmpServiceImpl.register} for the pattern. This handler is the
-     * safety net for code that doesn't.
-     *
-     * @param ex the duplicate-key exception thrown by Spring
-     * @param request current HTTP request (used to populate the path field)
-     * @return a 409 Conflict response with a generic duplicate-resource body
-     */
-    @ExceptionHandler(org.springframework.dao.DuplicateKeyException.class)
-    public ResponseEntity<ErrorResponseDTO> handleDuplicateKeyException(
-            org.springframework.dao.DuplicateKeyException ex,
-            HttpServletRequest request) {
-        // log at WARN, not ERROR - a duplicate-key collision is a client error,
-        // not a server failure. The underlying SQL message is logged for
-        // diagnostic purposes only and is NOT included in the response.
-        log.warn("Duplicate key violation at {}: {}", request.getRequestURI(), ex.getMessage());
-
-        ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(
-                "DUPLICATE_RESOURCE",
-                "A resource with the same unique value already exists",
-                LocalDateTime.now(),
-                request.getRequestURI()
-        );
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponseDTO);
-    }
-
-    /**
-     * handle uncaught exception
-     * @param ex an exception object
-     * @param request current HTTP request object
-     * @return a response entity
-     */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponseDTO> handleUncaughtException(
-            Exception ex,
-            HttpServletRequest request) {
-
-        // record detailed exception info into server log (including stack tree)
-        log.error("Uncaught Exception at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
-
-        // the information returned to client should be conservative - DO NOT expose server-side details
-        ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(
-                "INTERNAL_ERROR",
-                "An unexpected error occurred. Please contact support.",
-                LocalDateTime.now(),
-                request.getRequestURI()
-        );
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponseDTO);
     }
 
     /**
@@ -317,5 +249,117 @@ public class GlobalExceptionHandler {
                         LocalDateTime.now(),
                         request.getRequestURI()
                 ));
+    }
+
+    /**
+     * Handles database unique-constraint violations.
+     *
+     * <p>When a write reaches the database with a value that violates a unique
+     * constraint (e.g. creating a {@code dept} with a name that already exist),
+     * Spring translates the underlying SQL error into
+     * {@link org.springframework.dao.DuplicateKeyException}. Without this dedicated
+     * handler, the {@code Exception.class} catch-all would map it to HTTP 500 - but
+     * "you sent a value that conflicts with an existing resource" is a client
+     * problem, not a server failure. The correct status is 409 Conflict.
+     *
+     * <p>The external message is intentionally generic ("a duplicate value
+     * exists") rather than echoing the SQL exception text, which would leak
+     * schema details (table names, index names) to clients. Services that want
+     * a friendlier, field-specific message should catch
+     * {@link org.springframework.dao.DataIntegrityViolationException} themselves
+     * and rethrow as {@link BusinessRuleViolationException} - see
+     * {@code EmpServiceImpl.register} for the pattern. This handler is the
+     * safety net for code that doesn't.
+     *
+     * @param ex the duplicate-key exception thrown by Spring
+     * @param request current HTTP request (used to populate the path field)
+     * @return a 409 Conflict response with a generic duplicate-resource body
+     */
+    @ExceptionHandler(org.springframework.dao.DuplicateKeyException.class)
+    public ResponseEntity<ErrorResponseDTO> handleDuplicateKeyException(
+            org.springframework.dao.DuplicateKeyException ex,
+            HttpServletRequest request) {
+        // log at WARN, not ERROR - a duplicate-key collision is a client error,
+        // not a server failure. The underlying SQL message is logged for
+        // diagnostic purposes only and is NOT included in the response.
+        log.warn("Duplicate key violation at {}: {}", request.getRequestURI(), ex.getMessage());
+
+        ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(
+                "DUPLICATE_RESOURCE",
+                "A resource with the same unique value already exists",
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponseDTO);
+    }
+
+    /**
+     * Handles malformed or missing request bodies.
+     *
+     * <p>When Jackson cannot deserialize the request body — invalid JSON syntax
+     * (e.g. {@code {"name":}}), incompatible types ({@code "age": "old"} where
+     * Integer is expected), or a missing required body — Spring throws
+     * {@link org.springframework.http.converter.HttpMessageNotReadableException}
+     * before any controller method is invoked. Bean Validation never runs because
+     * there's no valid object to validate.
+     *
+     * <p>Without this dedicated handler, malformed JSON would fall through to the
+     * {@code Exception.class} catch-all and surface as 500 — misleading clients
+     * into thinking the server is broken when in fact their request body is
+     * unparseable. The correct status is 400 Bad Request.
+     *
+     * <p>The external message is intentionally generic. The underlying Jackson
+     * parser message often contains line/column numbers and snippets of the
+     * malformed input, which are useful for the server log but could echo back
+     * sensitive content if clients accidentally include credentials in a botched
+     * request. Clients should rely on their own JSON tooling rather than
+     * server-side parse diagnostics.
+     *
+     * @param ex the unreadable-body exception thrown by Spring
+     * @param request current HTTP request (used to populate the path field)
+     * @return a 400 Bad Request response with a generic malformed-body message
+     */
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponseDTO> handleHttpMessageNotReadableException(
+            org.springframework.http.converter.HttpMessageNotReadableException ex,
+            HttpServletRequest request) {
+        // log at WARN — the request was malformed by the client, not the server.
+        // ex.getMessage() includes parser details (line/column) for log diagnosis.
+        log.warn("Malformed request body at {}: {}", request.getRequestURI(), ex.getMessage());
+
+        ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(
+                "MALFORMED_REQUEST_BODY",
+                "Request body is malformed or missing",
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponseDTO);
+    }
+
+    /**
+     * handle uncaught exception
+     * @param ex an exception object
+     * @param request current HTTP request object
+     * @return a response entity
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponseDTO> handleUncaughtException(
+            Exception ex,
+            HttpServletRequest request) {
+
+        // record detailed exception info into server log (including stack tree)
+        log.error("Uncaught Exception at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
+
+        // the information returned to client should be conservative - DO NOT expose server-side details
+        ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(
+                "INTERNAL_ERROR",
+                "An unexpected error occurred. Please contact support.",
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponseDTO);
     }
 }
