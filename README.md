@@ -5,13 +5,14 @@ project, currently being refactored toward production quality in a
 series of atomic PRs. My first end-to-end backend project, and an
 ongoing sandbox for engineering practices I'm learning along the way.
 
-**Status:** Active. 11 merged PRs as of May 2026.
+**Status:** Active. 21 merged PRs as of June 2026.
 
 **Long-term goal:** Evolve this from a learning sandbox into a
 production-deployable school administration system.
 
 **Stack:** Java 17, Spring Boot 3.5.13, MyBatis, MySQL 8, Maven
-multi-module, JWT (jjwt 0.12), BCrypt, JUnit + H2 (test-scoped).
+multi-module, JWT (jjwt 0.12), BCrypt (spring-security-crypto), springdoc-openapi,
+JUnit + H2 (test-scoped).
 
 ## Table of Contents
 
@@ -30,12 +31,15 @@ departments, classes, employees (teachers, head teachers, advisors),
 and students. The current scope includes:
 
 - CRUD APIs for departments, classes, employees, and students
-- JWT-based authentication with `Authorization: Bearer <token>` headers
+- Self-service authentication: registration, login, token refresh, and 
+  password change
+- Dual-token JWT auth: a short-lived access token plus a refresh token
+  stored in Redis (SHA-256 hashed), with per-user revocation
 - BCrypt password hashing with verified data migration from plain-text
 - Centralized exception handling with structured `ErrorResponseDTO`
   responses
 - Audit logging of write operations via AOP
-- OpenAPI/Swagger documentation via Knife4j
+- OpenAPI/Swagger documentation via springdoc-openapi
 
 The codebase is deliberately incrementally improved — each PR is a
 focused refactor with a coherent story, atomic commits, and a
@@ -64,10 +68,11 @@ com.yue/
 ├── controller/                  REST controllers
 ├── service/                     Business logic
 ├── mapper/                      MyBatis mappers
-├── exception/                   Custom exceptions + GlobalExceptionHandler
+├── repository/                  RefreshTokenRepository (Redis-backed)
+├── security/                    JwtService, SecurityConfig, JwtConfigProperties
 ├── interceptor/                 TokenInterceptor (JWT validation)
-├── security/                    JwtService, PasswordEncoder bean
-├── config/                      WebConfig, Knife4j config
+├── exception/                   Custom exceptions + GlobalExceptionHandler
+├── config/                      WebConfig, OpenApiConfig, CorsConfig
 ├── aop/                         LogAspect (operation auditing)
 └── anno/                        Custom annotations (@Log)
 ```
@@ -78,9 +83,10 @@ com.yue/
 HTTP request
    |
    v
-TokenInterceptor (whitelist: /login, /doc.html, etc.)
+TokenInterceptor (whitelist: /login, /register, /refresh, swagger routes)
    |  reads Authorization: Bearer <jwt>
-   |  validates via JwtService, sets BaseContext
+   |  validates via JwtService, checks token_type == "access"
+   |  sets BaseContext (thread-local empId)
    v
 @RestController method
    |  @Valid triggers Bean Validation
@@ -97,6 +103,9 @@ Response wrapping → JSON via Jackson
 On error: GlobalExceptionHandler → ErrorResponseDTO
 ```
 
+Refresh tokens live outside the flow: they are issued at login, stored 
+in Redis, and exchanged for a new access token at `/refresh`.
+
 ## Getting Started
 
 ### Prerequisites
@@ -105,6 +114,7 @@ On error: GlobalExceptionHandler → ErrorResponseDTO
 - Maven 3.6+ (for build; or use IntelliJ's bundled Maven)
 - MySQL 8.x (running on `localhost:3306` for default config)
 - IntelliJ IDEA recommended (the project includes `.idea/` config)
+- Redis (for refresh-token storage; default `localhost:6379`)
 
 ### 1. Clone the repository
 
@@ -137,6 +147,7 @@ cp clazz-lms-server/src/main/resources/application.example.yml \
 Then edit `application.yml`:
 
 - `spring.datasource.username` / `password` — your MySQL credentials
+- `spring.data.redis.host` / `port` - your Redis connection
 - `jwt.secret` — any string at least 32 characters long (for HMAC-SHA256
   signing)
 
@@ -154,8 +165,9 @@ From the command line:
 mvn -pl clazz-lms-server spring-boot:run
 ```
 
-The server listens on `http://localhost:8080`. Swagger UI is available
-at `http://localhost:8080/doc.html`.
+The server listens on `http://localhost:8080`. The interactive Swagger 
+UI is available at `http://localhost:8080/swagger-ui.html`, and the 
+raw OpenAPI 3 spec at `http://localhost:8080/v3/api-docs`.
 
 ### 5. Verify
 
@@ -165,14 +177,50 @@ curl -X POST http://localhost:8080/login \
   -d '{"username": "<your-test-user>", "password": "<their-password>"}'
 ```
 
-A successful login returns a JWT token; subsequent requests include
-it via the `Authorization: Bearer <token>` header.
+A successful login returns an access token and a refresh token; subsequent
+requests include the access token via the `Authorization: Bearer <token>` 
+header. When the access token expires, the client exchanges the refresh token
+at `POST /refresh` for a new one instead of forcing a re-login.
 
 ## Engineering Highlights
 
-The project has been refactored across 11 atomic PRs since May 2026,
+The project has been refactored across 21 atomic PRs since May 2026,
 each documented with a clear motivation, design decisions, and
 verification steps. Selected highlights:
+
+### Dual-token authentication with Redis-backed refresh tokens ([PR #14](https://github.com/jiangyue95/clazz-lms/pull/14))
+The old design used one access token with a long lifetime. This release
+splits it into two tokens: a short-lived access token for normal requests,
+and a refresh token whose only job is to obtain a new access token.
+Refresh tokens are never stored in raw form. Each token is hashed with
+SHA-256, and only the hash is kept in Redis. SHA-256 is the right choice
+here, not BCrypt. A refresh token is a long, random value generated by
+the server, so it cannot be guessed by brute force. BCrypt is deliberately
+slow to protect weak, human-chosen passwords -- and that slowness
+buys nothing for a value that is already unguessable.
+Redis also keeps a per-user index: the key `refresh_user:{empId}`
+holds the set of that user's token hashes. This index is what makes it
+possible to revoke all of one user's tokens at once, for example when
+they change their password.
+Two mechanisms control how long a token lives. Each Redis key is given
+a TTL equal to the time left until the token's `expiresAt`, so expired
+tokens are deleted automatically with no cleanup job. A separate 
+`revokedAt` field lets a token be invalidated early, before it would expire
+on its own.
+Storage uses `StringRedisTemplate` with explicit Jackson serialization,
+rather than `@RedisHash` repositories. The reason is debuggability: the
+value saved in Redis stays as readable JSON, so it can be inspected
+directly with `redis-cli`.
+
+### Self-service auth: registration and password change with session revocation ([PR #13](https://github.com/jiangyue95/clazz-lms/pull/13))
+Added `POST /register` and `PATCH /me/password`. Changing a password
+revokes all of that user's refresh tokens, so any stolen token is invalidated
+immediately rather than lingering until natural expiry. The revocation is 
+deliberately ordered last in the method and wrapped in a try-catch:
+`@Transactional` rolls back the MySQL write on an uncaught exception, but 
+Redis is not transactional -- performing the Redis revoke after the DB
+commit, and swallowing any Redis failure, prevents a state where the
+password is rolled back while the tokens are already gone.
 
 ### BCrypt password migration via dual-write transition ([PR #11](https://github.com/jiangyue95/clazz-lms/pull/11))
 
@@ -234,26 +282,28 @@ For the full list, see the [merged PRs on GitHub](https://github.com/jiangyue95/
 
 Planned improvements, roughly in order of priority:
 
+- **Spring Security migration**: Replace the custom `TokenInterceptor`
+  with `OncePerRequestFilter` + `AuthenticationEntryPoint`. The
+  project currently depends only on `spring-security-crypto` (for
+  BCrypt), not `spring-boot-starter-security`, to avoid activating
+  autoconfiguration (formLogin, httpBasic, CSRF) that would conflict
+  with the interceptor flow. Adopting the full filter chain is a separate,
+  larger refactor.
+- **`DelegatingPasswordEncoder`**: `SecurityConfig` already exposes the
+  encoder via the `PasswordEncoder` interface, so migrating BCrypt ->
+  Argon2 (with `{bcrypt}` / `{argon2}` format prefixes) would be a near
+  single-line change with no dual-write series needed. 
+- **Role-Based access control (RBAC)**: Currently any authenticated user
+  can hit any endpoint. Plan: integrate `Emp.job` (1=head teacher,
+  2=lecturer, ...) with role-gated authorities.
 - **Schema migration tooling**: Commit a versioned `schema.sql`
   (or migrate to Flyway / Liquibase for proper schema versioning).
-- **Spring Security migration**: Replace the custom `TokenInterceptor`
-  with `OncePerRequestFilter` + `AuthenticationEntryPoint`. Adopt
-  `DelegatingPasswordEncoder` to support future algorithm migrations
-  (e.g., BCrypt → Argon2) without another dual-write series.
-- **Refresh token + access token**: Currently access tokens are
-  long-lived (12h) with no revocation. Plan: short-lived (15min)
-  access tokens, long-lived (7d) refresh tokens stored in Redis with
-  per-user revocation support.
-- **Role-based access control (RBAC)**: Currently any authenticated
-  user can hit any endpoint. Plan: integrate `Emp.job` (1=head
-  teacher, 2=lecturer, …) with Spring Security authorities.
-- **File upload via Aliyun OSS**: Configuration is in place; upload
-  endpoints to be implemented.
-- **Integration tests for auth flow**: Existing tests cover Dept
-  endpoints; coverage for Login + Emp CRUD is pending.
-- **DTO cleanups**: `EmpLoginDTO.@Size(max=32)` is too restrictive
-  for strong passwords; message-vs-constraint mismatches in
-  `username` validation message ("must not exceed 50" vs `max=20`).
+- **File upload via AWS S3**: UploadController is in place; the 
+  previous Aliyun OSS configuration has expired and will be replaced 
+  with S3.
+- **Integration tests beyond Dept**: `DeptControllerIntegrationTest`
+  covers the Dept endpoints; coverage for Emp, Clazz, Student, and the
+  auth flow is pending.
 
 ## Project Origin
 
