@@ -26,7 +26,15 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // 3. Temporary allow all request, replace the default "ALL requests need to be authorised"
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .authorizeHttpRequests(auth -> auth
+                        // Authentication endpoints (no token yet)
+                        .requestMatchers("/login", "/register", "/refresh").permitAll()
+                        // Browser noise
+                        .requestMatchers("/favicon.ico").permitAll()
+                        // OpenAPI documentation
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui.html",
+                                "/swagger-ui/**", "/webjars/**").permitAll()
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
