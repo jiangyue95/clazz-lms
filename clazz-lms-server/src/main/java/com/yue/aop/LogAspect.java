@@ -18,16 +18,10 @@ import java.util.Arrays;
 @Slf4j
 @Component
 @Aspect
+@RequiredArgsConstructor
 public class LogAspect {
 
-    @Autowired
-    private OperateLogMapper operateLogMapper;
-
-    @Autowired
-    private HttpServletRequest request;
-
-    @Autowired
-    private ObjectMapper objectMapper; // Jackson 工具，用于将对象转为 JSON 字符串
+    private final OperateLogMapper operateLogMapper;
 
     @Around("@annotation(com.yue.anno.Log)")
     public Object recordLog(ProceedingJoinPoint joinPoint) throws Throwable {
