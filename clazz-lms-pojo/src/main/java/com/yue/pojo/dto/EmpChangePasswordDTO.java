@@ -17,9 +17,10 @@ import lombok.NoArgsConstructor;
  * is a second factor.
  *
  * <p>Note: this DTO is used for an authenticated endpoint; the user's id
- * is taken from the JWT token's claims (via BaseContext), not from the
- * request body. Allowing the body to specify the user id would be a
- * privilege-escalation vector - anyone could change anyone else's password.
+ * is taken from the JWT token's claims (via Spring Security's Security
+ * Context), not from the request body. Allowing the body to specify the
+ * user id would be a privilege-escalation vector - anyone could change
+ * anyone else's password.
  */
 @AllArgsConstructor
 @Builder

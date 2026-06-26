@@ -1,16 +1,15 @@
 // An AOP class for logging method calls
 package com.yue.aop;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yue.mapper.OperateLogMapper;
 import com.yue.pojo.entity.OperateLog;
-import com.yue.utils.BaseContext;
-import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -19,16 +18,10 @@ import java.util.Arrays;
 @Slf4j
 @Component
 @Aspect
+@RequiredArgsConstructor
 public class LogAspect {
 
-    @Autowired
-    private OperateLogMapper operateLogMapper;
-
-    @Autowired
-    private HttpServletRequest request;
-
-    @Autowired
-    private ObjectMapper objectMapper; // Jackson 工具，用于将对象转为 JSON 字符串
+    private final OperateLogMapper operateLogMapper;
 
     @Around("@annotation(com.yue.anno.Log)")
     public Object recordLog(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -48,7 +41,10 @@ public class LogAspect {
         // Assemble the operate log entity
         OperateLog operateLog = new OperateLog();
 
-        Integer currentId = BaseContext.getCurrentId();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Integer currentId = (auth != null && auth.getPrincipal() instanceof Integer)
+                ? (Integer) auth.getPrincipal()
+                : null;
 
         operateLog.setOperateEmpId(currentId);
         operateLog.setOperateTime(LocalDateTime.now());
