@@ -15,6 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtService jwtService;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -25,7 +26,7 @@ public class SecurityConfig {
                 // 2. Does not create HttpSession, totally stateless
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // 3. Temporary allow all request, replace the default "ALL requests need to be authorised"
+                // 3. Authorization rules: whitelist public endpoints, everything else requires authentication
                 .authorizeHttpRequests(auth -> auth
                         // Authentication endpoints (no token yet)
                         .requestMatchers("/login", "/register", "/refresh").permitAll()
@@ -35,7 +36,9 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui.html",
                                 "/swagger-ui/**", "/webjars/**").permitAll()
                         .anyRequest().authenticated())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(ex ->
+                        ex.authenticationEntryPoint(jwtAuthenticationEntryPoint));
         return http.build();
     }
 
