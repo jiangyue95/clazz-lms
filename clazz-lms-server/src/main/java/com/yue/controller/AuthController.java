@@ -8,7 +8,6 @@ import com.yue.pojo.vo.EmpInfoVO;
 import com.yue.pojo.vo.EmpLoginVO;
 import com.yue.pojo.vo.RefreshVO;
 import com.yue.service.EmpService;
-import com.yue.utils.BaseContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -112,8 +112,9 @@ public class AuthController {
             // to change your password).
     )
     @PatchMapping("/me/password")
-    public ResponseEntity<Void> changePassword(@Valid @RequestBody EmpChangePasswordDTO dto) {
-        Integer currentUserId = BaseContext.getCurrentId();
+    public ResponseEntity<Void> changePassword(
+            @AuthenticationPrincipal Integer currentUserId,
+            @Valid @RequestBody EmpChangePasswordDTO dto) {
         log.info("Change-password request from empId={}", currentUserId);
         empService.changePassword(currentUserId, dto.getCurrentPassword(), dto.getNewPassword());
         return ResponseEntity.noContent().build();
