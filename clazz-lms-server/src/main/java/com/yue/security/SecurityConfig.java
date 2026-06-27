@@ -37,7 +37,19 @@ public class SecurityConfig {
                         // OpenAPI documentation
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui.html",
                                 "/swagger-ui/**", "/webjars/**").permitAll()
+                        // Logs
                         .requestMatchers(HttpMethod.GET, "/logs/**").hasRole("ADMIN")
+                        // Emp: employee
+                        .requestMatchers(HttpMethod.GET, "/emps/**").hasAnyRole("ADMIN", "TEACHING_AND_RESEARCH_SUPERVISOR")
+                        .requestMatchers(HttpMethod.POST, "/emps/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/emps/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/emps/**").hasRole("ADMIN")
+                        // Dept: department
+                        .requestMatchers(HttpMethod.GET, "/depts/**").hasAnyRole("ADMIN", "TEACHING_AND_RESEARCH_SUPERVISOR")
+                        .requestMatchers(HttpMethod.POST, "/depts/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/depts/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/depts/**").hasRole("ADMIN")
+                        // Any request
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex
