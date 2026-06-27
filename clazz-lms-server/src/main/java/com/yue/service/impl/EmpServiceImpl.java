@@ -258,6 +258,7 @@ public class EmpServiceImpl implements EmpService {
         Map<String, Object> accessClaims = new HashMap<>();
         accessClaims.put("id", emp.getId());
         accessClaims.put("username", emp.getUsername());
+        accessClaims.put("role", emp.getJob());
         String accessToken = jwtService.generateAccessToken(accessClaims);
 
         // 4. generate refresh token + persist to Redis (extracted into a helper)
@@ -311,6 +312,7 @@ public class EmpServiceImpl implements EmpService {
         Map<String, Object> accessClaims = new HashMap<>();
         accessClaims.put("id", emp.getId());
         accessClaims.put("username", emp.getUsername());
+        accessClaims.put("role", emp.getJob());
         String newAccessToken = jwtService.generateAccessToken(accessClaims);
 
         return RefreshVO.builder()

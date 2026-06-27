@@ -1,5 +1,6 @@
 package com.yue.security;
 
+import com.yue.pojo.enums.Job;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -11,11 +12,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -52,10 +56,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     log.info("Non-access token used at {}: token_type={}",request.getRequestURI(), tokenType);
                 } else {
                     Integer empId = (Integer) claims.get("id");
+
+                    Integer roleCode = (Integer) claims.get("role");
+                    Job job = Job.fromCode(roleCode);
+                    List<GrantedAuthority> authorities = (job == null)
+                            ? Collections.emptyList()
+                            : List.of(new SimpleGrantedAuthority("ROLE_" + job.name()));
+
                     UsernamePasswordAuthenticationToken authenticationToken =
-                            new UsernamePasswordAuthenticationToken(empId, null, Collections.emptyList());
+                            new UsernamePasswordAuthenticationToken(empId, null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                    log.info("Set authentication successfully: {}", empId);
+                    log.info("Set authentication successfully: empId={}, role={}", empId, job);
                 }
             } catch (ExpiredJwtException e) {
                 request.setAttribute("auth_error", ERROR_CODE_ACCESS_EXPIRED);
