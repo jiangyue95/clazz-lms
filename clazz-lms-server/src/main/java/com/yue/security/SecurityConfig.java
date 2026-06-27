@@ -49,6 +49,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/depts/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/depts/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/depts/**").hasRole("ADMIN")
+                        // Clazz: class
+                        .requestMatchers(HttpMethod.POST, "/clazzs/**").hasAnyRole("ADMIN", "TEACHING_AND_RESEARCH_SUPERVISOR")
+                        .requestMatchers(HttpMethod.PUT, "/clazzs/**").hasAnyRole("ADMIN", "TEACHING_AND_RESEARCH_SUPERVISOR")
+                        .requestMatchers(HttpMethod.DELETE, "/clazzs/**").hasAnyRole("ADMIN", "TEACHING_AND_RESEARCH_SUPERVISOR")
+                        // Student
+                        .requestMatchers(HttpMethod.DELETE, "/students/**").hasAnyRole("ADMIN", "STUDENT_AFFAIRS_SUPERVISOR")
+                        .requestMatchers(HttpMethod.POST, "/students/**").hasAnyRole("ADMIN", "STUDENT_AFFAIRS_SUPERVISOR", "HEAD_TEACHER")
+                        .requestMatchers(HttpMethod.PUT, "/students/**").hasAnyRole("ADMIN", "STUDENT_AFFAIRS_SUPERVISOR", "HEAD_TEACHER")
                         // Any request
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
