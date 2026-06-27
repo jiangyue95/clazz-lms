@@ -97,7 +97,7 @@
 
     <!-- query employee basic information by username -->
     <select id="getByUsername" resultType="com.yue.pojo.entity.Emp">
-        SELECT id, username, password, name
+        SELECT id, username, password, name, job
         FROM emp
         WHERE username = #{username}
     </select>
