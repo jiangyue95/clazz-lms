@@ -34,13 +34,19 @@ public interface StudentService {
     StudentVO add(StudentSaveDTO studentSaveDTO);
 
     /**
-     * Look up a student by id.
+     * Look up a single student by id, optionally restricted to a head
+     * teacher's own class.
      *
-     * @param id student id
-     * @return the student VO
-     * @throws com.yue.exception.ResourceNotFoundException if no student with that id
+     * @param id            student id
+     * @param scopeMasterId ownership scope. If non-null, only a student whose
+     *                      class {@code master_id} equals this value is returned;
+     *                      a student outside that scope is treated as not found.
+     *                      If null, no ownership restriction is applied (admin path).
+     * @return the matching student VO
+     * @throws com.yue.exception.ResourceNotFoundException if no student matches
+     *         the id within the given scope (genuinely missing, or out of scope)
      */
-    StudentVO getStudentById(Integer id);
+    StudentVO getStudentById(Integer id, Integer scopeMasterId);
 
     /**
      * Update an existing student.

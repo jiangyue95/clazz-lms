@@ -115,4 +115,6 @@ public interface StudentMapper {
      */
     @MapKey("name")
     List<Map<String, Object>> countStudentDegreeData();
+
+    StudentVO getStudentByIdScoped(@Param("id") Integer id, @Param("scopeMasterId") Integer scopeMasterId);
 }

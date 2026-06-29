@@ -6,6 +6,7 @@ import com.yue.pojo.dto.StudentQueryParam;
 import com.yue.pojo.dto.StudentSaveDTO;
 import com.yue.pojo.dto.StudentUpdateDTO;
 import com.yue.pojo.dto.ViolationDTO;
+import com.yue.pojo.enums.Job;
 import com.yue.pojo.vo.StudentVO;
 import com.yue.service.StudentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,7 +14,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -83,16 +86,22 @@ public class StudentController {
      * Get a student by id.
      *
      * @param id student id
-     * @return 200 OK with the student; 404 if not found (handled centrally)
+     * @return 200 OK with the student; 404 if not found， or if the caller is a
+     *         head teacher and the student is outside their class
      */
     @Operation(
             summary = "Get a student by id",
             operationId = "getStudent"
     )
     @GetMapping("/{id}")
-    public ResponseEntity<StudentVO> get(@PathVariable Integer id) {
+    public ResponseEntity<StudentVO> get(
+            @PathVariable Integer id,
+            Authentication authentication) {
+        boolean isHeadTeacher = authentication.getAuthorities().stream()
+                        .anyMatch(a -> ("ROLE_" + Job.HEAD_TEACHER.name()).equals(a.getAuthority()));
+        Integer scopeMasterId = isHeadTeacher ? (Integer) authentication.getPrincipal(): null;
         log.info("Query student by id:{}", id);
-        StudentVO studentVO = studentService.getStudentById(id);
+        StudentVO studentVO = studentService.getStudentById(id, scopeMasterId);
         return ResponseEntity.ok(studentVO);
     }
 

@@ -131,4 +131,32 @@
         FROM student
         GROUP BY degree
     </select>
+
+    <!-- Student list query with scope -->
+    <select id="getStudentByIdScoped" resultType="com.yue.pojo.vo.StudentVO">
+        SELECT
+        s.id,
+        s.name,
+        s.no,
+        s.gender,
+        s.phone,
+        s.degree,
+        s.id_card,
+        s.is_college,
+        s.address,
+        s.graduation_date,
+        s.violation_count,
+        s.violation_score,
+        s.clazz_id,
+        c.name AS clazz_name,
+        s.create_time,
+        s.update_time
+        FROM student AS s LEFT JOIN clazz AS c ON s.clazz_id = c.id
+        <where>
+            s.id = #{id}
+            <if test="scopeMasterId != null">
+                AND c.master_id = #{scopeMasterId}
+            </if>
+        </where>
+    </select>
 </mapper>

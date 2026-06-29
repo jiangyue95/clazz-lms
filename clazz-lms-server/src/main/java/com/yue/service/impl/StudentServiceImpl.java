@@ -90,15 +90,18 @@ public class StudentServiceImpl implements StudentService {
     }
 
     /**
-     * Look up a single student by id.
+     * {@inheritDoc}
      *
-     * @param id student id
-     * @return the matching student
-     * @throws ResourceNotFoundException if no student with the given id exists
+     * <p>Implemented as a single scoped query ({@code getStudentByIdScoped},
+     * which LEFT JOINs clazz) rather than a fetch-then-compare. When
+     * {@code scopeMasterId} is non-null, an out-of-scope student simply doesn't
+     * match the query and returns null, so it reuses the exact same null-to-404
+     * path as a genuinely missing id — the two cases are indistinguishable to the
+     * caller by design.
      */
     @Override
-    public StudentVO getStudentById(Integer id) {
-        StudentVO studentVO = studentMapper.getStudentById(id);
+    public StudentVO getStudentById(Integer id, Integer scopeMasterId) {
+        StudentVO studentVO = studentMapper.getStudentByIdScoped(id, scopeMasterId);
         if (studentVO == null) {
             throw new ResourceNotFoundException("Student with id " + id + " not found");
         }
