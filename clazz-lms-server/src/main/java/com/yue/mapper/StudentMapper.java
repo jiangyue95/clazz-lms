@@ -1,9 +1,12 @@
 package com.yue.mapper;
 
-import com.yue.pojo.entity.Student;
 import com.yue.pojo.dto.StudentQueryParam;
+import com.yue.pojo.entity.Student;
 import com.yue.pojo.vo.StudentVO;
-import org.apache.ibatis.annotations.*;
+import org.apache.ibatis.annotations.MapKey;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 import java.util.Map;
@@ -76,19 +79,24 @@ public interface StudentMapper {
     /**
      * Update student info.
      *
-     * @param student student entity (id required, other fields optional)
+     * @param student the student entity carrying id (required) and the
+     *                filed to update
+     * @param scopeMasterId when non-null, the update only matches a row whose class
+     *                      master_id equals this value; when null, no ownership
+     *                      filter is applied
      * @return number of rows affected (1 if updated, 0 if no student with that id)
      */
-    int update(Student student);
+    int update(@Param("student") Student student, @Param("scopeMasterId") Integer scopeMasterId);
 
     /**
      * Delete a student by id.
      *
      * @param id student id
+     * @param scopeMasterId when non-null, the row is deleted only if its class
+     *                      master_id equals this value; when null, no ownership filter is applied
      * @return number of rows affected (1 if deleted, 0 if no student with that id)
      */
-    @Delete("DELETE FROM student WHERE id = #{id}")
-    int deleteById(Integer id);
+    int deleteById(@Param("id") Integer id, @Param("scopeMasterId") Integer scopeMasterId);
 
     /**
      * Record a violation: increment {@code violation_score} by the given amount
@@ -96,9 +104,13 @@ public interface StudentMapper {
      *
      * @param id student id
      * @param score the violation score to add (additive, not replacement)
+     * @param scopeMasterId when non-null, the update only matches a row whose class
+     *                      master_id equals this value; when null, no ownership filter is applied
      * @return number of rows affected (1 if student exists, 0 otherwise)
      */
-    int modifyViolationScore(Integer id, Integer score);
+    int modifyViolationScore(@Param("id") Integer id,
+                             @Param("score") Integer score,
+                             @Param("scopeMasterId") Integer scopeMasterId);
 
     /**
      * Get clazz(class) student count data.
@@ -116,5 +128,15 @@ public interface StudentMapper {
     @MapKey("name")
     List<Map<String, Object>> countStudentDegreeData();
 
+    /**
+     * Query a single student by id, optionally by class ownership.
+     *
+     * @param id student id
+     * @param scopeMasterId when non-null, the query additionally requires the
+     *                      student's class master_id to equal this value; when
+     *                      null, no ownership filter is applied
+     * @return the matching student VO, or {@code null} if no student matched
+     *         (no such id, or out of the given scope)
+     */
     StudentVO getStudentByIdScoped(@Param("id") Integer id, @Param("scopeMasterId") Integer scopeMasterId);
 }

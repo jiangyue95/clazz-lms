@@ -52,25 +52,32 @@
     <update id="update">
         Update student
         <set>
-            <if test="name != null and name != ''">name = #{name},</if>
-            <if test="no != null and no != ''">no = #{no},</if>
-            <if test="gender != null">gender = #{gender},</if>
-            <if test="phone != null and phone != ''">phone = #{phone},</if>
-            <if test="degree != null">degree = #{degree},</if>
-            <if test="idCard != null and idCard != ''">id_card = #{idCard},</if>
-            <if test="isCollege != null">is_college = #{isCollege},</if>
-            <if test="address != null and address != ''">address = #{address},</if>
-            <if test="graduationDate != null">graduation_date = #{graduationDate},</if>
-            <if test="clazzId != null">clazz_id = #{clazzId},</if>
-            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="student.name != null and student.name != ''">name = #{student.name},</if>
+            <if test="student.no != null and student.no != ''">no = #{student.no},</if>
+            <if test="student.gender != null">gender = #{student.gender},</if>
+            <if test="student.phone != null and student.phone != ''">phone = #{student.phone},</if>
+            <if test="student.degree != null">degree = #{student.degree},</if>
+            <if test="student.idCard != null and student.idCard != ''">id_card = #{student.idCard},</if>
+            <if test="student.isCollege != null">is_college = #{student.isCollege},</if>
+            <if test="student.address != null and student.address != ''">address = #{student.address},</if>
+            <if test="student.graduationDate != null">graduation_date = #{student.graduationDate},</if>
+            <if test="student.clazzId != null">clazz_id = #{student.clazzId},</if>
+            <if test="student.updateTime != null">update_time = #{student.updateTime},</if>
         </set>
-        WHERE id = #{id}
+        WHERE id = #{student.id}
+        <if test="scopeMasterId != null">
+            AND clazz_id IN (SELECT id FROM clazz WHERE master_id = #{scopeMasterId})
+        </if>
     </update>
 
+    <!-- Student violation -->
     <update id="modifyViolationScore">
         UPDATE student
         SET violation_score = violation_score + #{score}, violation_count = violation_count + 1
         WHERE id = #{id}
+        <if test="scopeMasterId != null">
+            AND clazz_id IN (SELECT id FROM clazz WHERE master_id = #{scopeMasterId})
+        </if>
     </update>
 
     <!-- Student list query -->
@@ -132,7 +139,7 @@
         GROUP BY degree
     </select>
 
-    <!-- Student list query with scope -->
+    <!-- Student query by id with scope -->
     <select id="getStudentByIdScoped" resultType="com.yue.pojo.vo.StudentVO">
         SELECT
         s.id,
@@ -159,4 +166,13 @@
             </if>
         </where>
     </select>
+
+    <!-- Delete student by id with scope -->
+    <delete id="deleteById">
+        DELETE FROM student
+        WHERE id = #{id}
+        <if test="scopeMasterId != null">
+            AND clazz_id IN (SELECT id FROM clazz WHERE master_id = #{scopeMasterId})
+        </if>
+    </delete>
 </mapper>

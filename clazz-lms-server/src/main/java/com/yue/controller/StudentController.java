@@ -86,7 +86,7 @@ public class StudentController {
      * Get a student by id.
      *
      * @param id student id
-     * @return 200 OK with the student; 404 if not found， or if the caller is a
+     * @return 200 OK with the student; 404 if not found, or if the caller is a
      *         head teacher and the student is outside their class
      */
     @Operation(
@@ -97,10 +97,8 @@ public class StudentController {
     public ResponseEntity<StudentVO> get(
             @PathVariable Integer id,
             Authentication authentication) {
-        boolean isHeadTeacher = authentication.getAuthorities().stream()
-                        .anyMatch(a -> ("ROLE_" + Job.HEAD_TEACHER.name()).equals(a.getAuthority()));
-        Integer scopeMasterId = isHeadTeacher ? (Integer) authentication.getPrincipal(): null;
         log.info("Query student by id:{}", id);
+        Integer scopeMasterId = resolveScopeMasterId(authentication);
         StudentVO studentVO = studentService.getStudentById(id, scopeMasterId);
         return ResponseEntity.ok(studentVO);
     }
@@ -110,7 +108,8 @@ public class StudentController {
      *
      * @param id student id (from URL, authoritative)
      * @param studentUpdateDTO student update payload
-     * @return 200 OK with the updated student; 404 if not found
+     * @return 200 OK with the updated student; 404 if not found, or if the caller
+     *         is a head teacher and the student is outside their class
      */
     @Operation(
             summary = "Update a student by id",
@@ -120,9 +119,11 @@ public class StudentController {
     @PutMapping("/{id}")
     public ResponseEntity<StudentVO> modifyStudentInfo(
             @PathVariable Integer id,
-            @Valid @RequestBody StudentUpdateDTO studentUpdateDTO) {
+            @Valid @RequestBody StudentUpdateDTO studentUpdateDTO,
+            Authentication authentication) {
         log.info("Update student id={}, payload={}", id, studentUpdateDTO);
-        StudentVO updated = studentService.modifyStudentInfo(id, studentUpdateDTO);
+        Integer scopeMasterId = resolveScopeMasterId(authentication);
+        StudentVO updated = studentService.modifyStudentInfo(id, studentUpdateDTO, scopeMasterId);
         return ResponseEntity.ok(updated);
     }
 
@@ -130,7 +131,8 @@ public class StudentController {
      * Delete a student by id.
      *
      * @param id student id
-     * @return 204 No Content on success; 404 if not found
+     * @return 204 No Content on success; 404 if not found, if the caller is a
+     *         header teacher and the student is outside their class
      */
     @Operation(
             summary = "Delete a student by id",
@@ -138,9 +140,12 @@ public class StudentController {
     )
     @Log
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ResponseEntity<Void> delete(
+            @PathVariable Integer id,
+            Authentication authentication) {
         log.info("Delete student by id:{}", id);
-        studentService.delete(id);
+        Integer scopeMasterId = resolveScopeMasterId(authentication);
+        studentService.delete(id, scopeMasterId);
         return ResponseEntity.noContent().build();
     }
 
@@ -154,7 +159,8 @@ public class StudentController {
      *
      * @param id student id
      * @param violationDTO payload carrying the violation score
-     * @return 200 OK with the updated student (new score and count); 404 if not found
+     * @return 200 No Content on success; 404 if not found, if the caller is a
+     *         header teacher and the student is outside their class
      */
     @Operation(
             summary = "Record a violation for a student",
@@ -167,9 +173,17 @@ public class StudentController {
     @PostMapping("/{id}/violations")
     public ResponseEntity<StudentVO> recordViolation(
             @PathVariable Integer id,
-            @Valid @RequestBody ViolationDTO violationDTO) {
+            @Valid @RequestBody ViolationDTO violationDTO,
+            Authentication authentication) {
         log.info("Record violation for student id={}, score={}", id, violationDTO.getScore());
-        StudentVO updated = studentService.recordViolation(id, violationDTO.getScore());
+        Integer scopeMasterId = resolveScopeMasterId(authentication);
+        StudentVO updated = studentService.recordViolation(id, violationDTO.getScore(), scopeMasterId);
         return ResponseEntity.ok(updated);
+    }
+
+    private Integer resolveScopeMasterId(Authentication authentication) {
+        boolean isHeadTeacher = authentication.getAuthorities().stream()
+                .anyMatch(a -> ("ROLE_" + Job.HEAD_TEACHER.name()).equals(a.getAuthority()));
+        return isHeadTeacher ? (Integer) authentication.getPrincipal() : null;
     }
 }
