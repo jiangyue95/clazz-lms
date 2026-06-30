@@ -2,13 +2,16 @@ package com.yue.service.impl;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.yue.exception.ForbiddenException;
 import com.yue.exception.ResourceNotFoundException;
+import com.yue.mapper.ClazzMapper;
 import com.yue.mapper.StudentMapper;
 import com.yue.pojo.PageResult;
 import com.yue.pojo.dto.StudentQueryParam;
 import com.yue.pojo.dto.StudentSaveDTO;
 import com.yue.pojo.dto.StudentUpdateDTO;
 import com.yue.pojo.entity.Student;
+import com.yue.pojo.vo.ClazzVO;
 import com.yue.pojo.vo.StudentVO;
 import com.yue.service.StudentService;
 import lombok.RequiredArgsConstructor;
@@ -22,11 +25,10 @@ import java.util.List;
 /**
  * StudentService implementation.
  *
- * <p>Existence is enforced at the service layer; any method operating on a
- * specific student verifies the student exists (via affected-rows check on
- * writes, or null-check on reads) and throws {@link ResourceNotFoundException}
- * if not. This keeps 404 handling out of every controller and in a single
- * layer, mapped centrally by {@code GlobalExceptionHandler}.
+ * <p>Ownership and existence are both enforced in the persistence layer:
+ * scoped queries / scoped writes mean an out-of scope or missing row is
+ * indistinguishable (affected == 0 or null -> 404), keeping authorization
+ * checks out of the controllers and in one place.
  */
 @Slf4j
 @Service
@@ -34,6 +36,7 @@ import java.util.List;
 public class StudentServiceImpl implements StudentService {
 
     private final StudentMapper studentMapper;
+    private final ClazzMapper clazzMapper;
 
     /**
      * Page-query the student list with optional filters.
@@ -52,19 +55,22 @@ public class StudentServiceImpl implements StudentService {
     }
 
     /**
-     * Create a new student.
+     * {@inheritDoc}
      *
-     * <p> The generated primary key is back-filled into the entity by MyBatis
-     * ({@code useGenerateKeys}), after which the full VO is re-fetched so the
-     * caller receives exactly what was persisted (including any DB-defaulted
-     * fields).
-     *
-     * @param studentSaveDTO student creation payload
-     * @return the newly created student
+     * <p>For a head teacher (non-null scopeMasterId), the target class is loaded
+     * and its master_id checked before insert; a class that is missing or not
+     * owned is rejected with 403. Admins (null) skip the check. The generated key
+     * is backfilled by MyBatis, then the full VO is re-fetched.
      */
     @Override
     @Transactional
-    public StudentVO add(StudentSaveDTO studentSaveDTO) {
+    public StudentVO add(StudentSaveDTO studentSaveDTO, Integer scopeMasterId) {
+        if (scopeMasterId != null) {
+            ClazzVO clazz = clazzMapper.selectById(studentSaveDTO.getClazzId());
+            if (clazz == null || !scopeMasterId.equals(clazz.getMasterId())) {
+                throw new ForbiddenException("Cannot create a student in a class you do not own");
+            }
+        }
         // Capture a single timestamp so createTime and updateTime are identical.
         LocalDateTime now = LocalDateTime.now();
         Student student = Student.builder()
@@ -90,15 +96,18 @@ public class StudentServiceImpl implements StudentService {
     }
 
     /**
-     * Look up a single student by id.
+     * {@inheritDoc}
      *
-     * @param id student id
-     * @return the matching student
-     * @throws ResourceNotFoundException if no student with the given id exists
+     * <p>Implemented as a single scoped query ({@code getStudentByIdScoped},
+     * which LEFT JOINs clazz) rather than a fetch-then-compare. When
+     * {@code scopeMasterId} is non-null, an out-of-scope student simply doesn't
+     * match the query and returns null, so it reuses the exact same null-to-404
+     * path as a genuinely missing id — the two cases are indistinguishable to the
+     * caller by design.
      */
     @Override
-    public StudentVO getStudentById(Integer id) {
-        StudentVO studentVO = studentMapper.getStudentById(id);
+    public StudentVO getStudentById(Integer id, Integer scopeMasterId) {
+        StudentVO studentVO = studentMapper.getStudentByIdScoped(id, scopeMasterId);
         if (studentVO == null) {
             throw new ResourceNotFoundException("Student with id " + id + " not found");
         }
@@ -106,19 +115,15 @@ public class StudentServiceImpl implements StudentService {
     }
 
     /**
-     * Update an existing student's information.
+     * {@inheritDoc}
      *
-     * <p>The {@code id} argument is authoritative; any id carried inside the
-     * DTO is ignored. THe mapper's affected-row count is checked to detect a
-     * non-existent target.
-     *
-     * @param id student id (from the URL path)
-     * @param studentUpdateDTO update payload
-     * @throws ResourceNotFoundException if no student with the given id exists
+     * <p>Ownership is enforced in SQL: the UPDATE only matches when the row is
+     * within scope, so an out-of-scope (or missing) row yields affected == 0 and
+     * maps to 404 - same path, indistinguishable to the caller.
      */
     @Override
     @Transactional
-    public StudentVO modifyStudentInfo(Integer id, StudentUpdateDTO studentUpdateDTO) {
+    public StudentVO modifyStudentInfo(Integer id, StudentUpdateDTO studentUpdateDTO, Integer scopeMasterId) {
         Student student = Student.builder()
                 .id(id)
                 .name(studentUpdateDTO.getName())
@@ -133,7 +138,7 @@ public class StudentServiceImpl implements StudentService {
                 .clazzId(studentUpdateDTO.getClazzId())
                 .updateTime(LocalDateTime.now())
                 .build();
-        int affected = studentMapper.update(student);
+        int affected = studentMapper.update(student, scopeMasterId);
         if (affected == 0) {
             throw new ResourceNotFoundException("Student with id " + id + " not found");
         }
@@ -141,39 +146,33 @@ public class StudentServiceImpl implements StudentService {
     }
 
     /**
-     * Delete a student by id.
+     * {@inheritDoc}
      *
-     * <p>Strict semantics: deleting a non-existing student is treated as an
-     * error(404), not a silent no-op.
-     *
-     * @param id student id
-     * @throws ResourceNotFoundException if no student with the given id exists
+     * <p>Ownership is enforced in SQL: the DELETE only matches when the row is
+     * within scope, so an out-of-scope (or missing) row yields affected == 0 and
+     * maps to 404 - same path, indistinguishable to the caller.
      */
     @Override
     @Transactional
-    public void delete(Integer id) {
-        int affected = studentMapper.deleteById(id);
+    public void delete(Integer id, Integer scopeMasterId) {
+        int affected = studentMapper.deleteById(id, scopeMasterId);
         if (affected == 0) {
             throw new ResourceNotFoundException("Student with id " + id + " not found");
         }
     }
 
     /**
-     * Record a violation against a student
+     * {@inheritDoc}
      *
-     * <p>Atomically increments {@code violation_score} by {@code socore} and
-     * {@code violation_count} by one in a single SQL statement. Additive, not
-     * a replacement.
-     *
-     * @param studentId student id
-     * @param score violation points to add
-     * @return the updated student, reflecting the new score and count
-     * @throws ResourceNotFoundException if no student with the given id exists
+     * <p>Ownership is enforced in SQL: the additive UPDATE (score += n, count += 1)
+     * only matches when the row is within scope, so an out-of-scope (or missing) row
+     * yields affected == 0 and maps to 404 - same path, indistinguishable to the
+     * caller.
      */
     @Override
     @Transactional
-    public StudentVO recordViolation(Integer studentId, Integer score) {
-        int affected = studentMapper.modifyViolationScore(studentId, score);
+    public StudentVO recordViolation(Integer studentId, Integer score, Integer scopeMasterId) {
+        int affected = studentMapper.modifyViolationScore(studentId, score, scopeMasterId);
         if (affected == 0) {
             throw new ResourceNotFoundException("Student with id " + studentId + " not found");
         }

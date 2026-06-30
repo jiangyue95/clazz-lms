@@ -6,6 +6,7 @@ import com.yue.pojo.dto.StudentQueryParam;
 import com.yue.pojo.dto.StudentSaveDTO;
 import com.yue.pojo.dto.StudentUpdateDTO;
 import com.yue.pojo.dto.ViolationDTO;
+import com.yue.pojo.enums.Job;
 import com.yue.pojo.vo.StudentVO;
 import com.yue.service.StudentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,7 +14,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -59,7 +62,8 @@ public class StudentController {
      * Create a new student.
      *
      * @param studentSaveDTO student creation payload
-     * @return 201 Created with the new resource and a Location header pointing to it
+     * @return 201 Created with the new resource and a Location header; 403 if a
+     *         head teacher targets a class they do not own
      */
     @Operation(
             summary = "Create a new student",
@@ -67,9 +71,11 @@ public class StudentController {
     )
     @Log
     @PostMapping
-    public ResponseEntity<StudentVO> save(@Valid @RequestBody StudentSaveDTO studentSaveDTO) {
+    public ResponseEntity<StudentVO> save(@Valid @RequestBody StudentSaveDTO studentSaveDTO,
+                                          Authentication authentication) {
         log.info("Add new student:{}", studentSaveDTO);
-        StudentVO created = studentService.add(studentSaveDTO);
+        Integer scopeMasterId = resolveScopeMasterId(authentication);
+        StudentVO created = studentService.add(studentSaveDTO, scopeMasterId);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -83,16 +89,20 @@ public class StudentController {
      * Get a student by id.
      *
      * @param id student id
-     * @return 200 OK with the student; 404 if not found (handled centrally)
+     * @return 200 OK with the student; 404 if not found, or if the caller is a
+     *         head teacher and the student is outside their class
      */
     @Operation(
             summary = "Get a student by id",
             operationId = "getStudent"
     )
     @GetMapping("/{id}")
-    public ResponseEntity<StudentVO> get(@PathVariable Integer id) {
+    public ResponseEntity<StudentVO> get(
+            @PathVariable Integer id,
+            Authentication authentication) {
         log.info("Query student by id:{}", id);
-        StudentVO studentVO = studentService.getStudentById(id);
+        Integer scopeMasterId = resolveScopeMasterId(authentication);
+        StudentVO studentVO = studentService.getStudentById(id, scopeMasterId);
         return ResponseEntity.ok(studentVO);
     }
 
@@ -101,7 +111,8 @@ public class StudentController {
      *
      * @param id student id (from URL, authoritative)
      * @param studentUpdateDTO student update payload
-     * @return 200 OK with the updated student; 404 if not found
+     * @return 200 OK with the updated student; 404 if not found, or if the caller
+     *         is a head teacher and the student is outside their class
      */
     @Operation(
             summary = "Update a student by id",
@@ -111,9 +122,11 @@ public class StudentController {
     @PutMapping("/{id}")
     public ResponseEntity<StudentVO> modifyStudentInfo(
             @PathVariable Integer id,
-            @Valid @RequestBody StudentUpdateDTO studentUpdateDTO) {
+            @Valid @RequestBody StudentUpdateDTO studentUpdateDTO,
+            Authentication authentication) {
         log.info("Update student id={}, payload={}", id, studentUpdateDTO);
-        StudentVO updated = studentService.modifyStudentInfo(id, studentUpdateDTO);
+        Integer scopeMasterId = resolveScopeMasterId(authentication);
+        StudentVO updated = studentService.modifyStudentInfo(id, studentUpdateDTO, scopeMasterId);
         return ResponseEntity.ok(updated);
     }
 
@@ -121,7 +134,8 @@ public class StudentController {
      * Delete a student by id.
      *
      * @param id student id
-     * @return 204 No Content on success; 404 if not found
+     * @return 204 No Content on success; 404 if not found, if the caller is a
+     *         header teacher and the student is outside their class
      */
     @Operation(
             summary = "Delete a student by id",
@@ -129,9 +143,12 @@ public class StudentController {
     )
     @Log
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ResponseEntity<Void> delete(
+            @PathVariable Integer id,
+            Authentication authentication) {
         log.info("Delete student by id:{}", id);
-        studentService.delete(id);
+        Integer scopeMasterId = resolveScopeMasterId(authentication);
+        studentService.delete(id, scopeMasterId);
         return ResponseEntity.noContent().build();
     }
 
@@ -145,7 +162,8 @@ public class StudentController {
      *
      * @param id student id
      * @param violationDTO payload carrying the violation score
-     * @return 200 OK with the updated student (new score and count); 404 if not found
+     * @return 200 No Content on success; 404 if not found, if the caller is a
+     *         header teacher and the student is outside their class
      */
     @Operation(
             summary = "Record a violation for a student",
@@ -158,9 +176,17 @@ public class StudentController {
     @PostMapping("/{id}/violations")
     public ResponseEntity<StudentVO> recordViolation(
             @PathVariable Integer id,
-            @Valid @RequestBody ViolationDTO violationDTO) {
+            @Valid @RequestBody ViolationDTO violationDTO,
+            Authentication authentication) {
         log.info("Record violation for student id={}, score={}", id, violationDTO.getScore());
-        StudentVO updated = studentService.recordViolation(id, violationDTO.getScore());
+        Integer scopeMasterId = resolveScopeMasterId(authentication);
+        StudentVO updated = studentService.recordViolation(id, violationDTO.getScore(), scopeMasterId);
         return ResponseEntity.ok(updated);
+    }
+
+    private Integer resolveScopeMasterId(Authentication authentication) {
+        boolean isHeadTeacher = authentication.getAuthorities().stream()
+                .anyMatch(a -> ("ROLE_" + Job.HEAD_TEACHER.name()).equals(a.getAuthority()));
+        return isHeadTeacher ? (Integer) authentication.getPrincipal() : null;
     }
 }
