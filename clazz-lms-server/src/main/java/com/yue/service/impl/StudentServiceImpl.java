@@ -2,13 +2,16 @@ package com.yue.service.impl;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.yue.exception.ForbiddenException;
 import com.yue.exception.ResourceNotFoundException;
+import com.yue.mapper.ClazzMapper;
 import com.yue.mapper.StudentMapper;
 import com.yue.pojo.PageResult;
 import com.yue.pojo.dto.StudentQueryParam;
 import com.yue.pojo.dto.StudentSaveDTO;
 import com.yue.pojo.dto.StudentUpdateDTO;
 import com.yue.pojo.entity.Student;
+import com.yue.pojo.vo.ClazzVO;
 import com.yue.pojo.vo.StudentVO;
 import com.yue.service.StudentService;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +36,7 @@ import java.util.List;
 public class StudentServiceImpl implements StudentService {
 
     private final StudentMapper studentMapper;
+    private final ClazzMapper clazzMapper;
 
     /**
      * Page-query the student list with optional filters.
@@ -51,19 +55,22 @@ public class StudentServiceImpl implements StudentService {
     }
 
     /**
-     * Create a new student.
+     * {@inheritDoc}
      *
-     * <p> The generated primary key is back-filled into the entity by MyBatis
-     * ({@code useGenerateKeys}), after which the full VO is re-fetched so the
-     * caller receives exactly what was persisted (including any DB-defaulted
-     * fields).
-     *
-     * @param studentSaveDTO student creation payload
-     * @return the newly created student
+     * <p>For a head teacher (non-null scopeMasterId), the target class is loaded
+     * and its master_id checked before insert; a class that is missing or not
+     * owned is rejected with 403. Admins (null) skip the check. The generated key
+     * is backfilled by MyBatis, then the full VO is re-fetched.
      */
     @Override
     @Transactional
-    public StudentVO add(StudentSaveDTO studentSaveDTO) {
+    public StudentVO add(StudentSaveDTO studentSaveDTO, Integer scopeMasterId) {
+        if (scopeMasterId != null) {
+            ClazzVO clazz = clazzMapper.selectById(studentSaveDTO.getClazzId());
+            if (clazz == null || !scopeMasterId.equals(clazz.getMasterId())) {
+                throw new ForbiddenException("Cannot create a student in a class you do not own");
+            }
+        }
         // Capture a single timestamp so createTime and updateTime are identical.
         LocalDateTime now = LocalDateTime.now();
         Student student = Student.builder()

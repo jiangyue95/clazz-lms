@@ -1,5 +1,6 @@
 package com.yue.service;
 
+import com.yue.exception.ForbiddenException;
 import com.yue.exception.ResourceNotFoundException;
 import com.yue.pojo.PageResult;
 import com.yue.pojo.dto.StudentQueryParam;
@@ -32,9 +33,15 @@ public interface StudentService {
      * Create a new student.
      *
      * @param studentSaveDTO student creation payload
+     * @param scopeMasterId ownership scope. If non-null (head teacher), the new
+     *                      student's target class must be owned by this master_id,
+     *                      otherwise creation is rejected. If null (admin), no
+     *                      ownership restriction is applied.
      * @return the created student (id populated by the database)
+     * @throws ForbiddenException if a head teacher attempts to create a student in a
+     *         class they do not own (or a class that does not exist)
      */
-    StudentVO add(StudentSaveDTO studentSaveDTO);
+    StudentVO add(StudentSaveDTO studentSaveDTO, Integer scopeMasterId);
 
     /**
      * Look up a single student by id, optionally restricted to a head

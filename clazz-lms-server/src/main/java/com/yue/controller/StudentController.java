@@ -62,7 +62,8 @@ public class StudentController {
      * Create a new student.
      *
      * @param studentSaveDTO student creation payload
-     * @return 201 Created with the new resource and a Location header pointing to it
+     * @return 201 Created with the new resource and a Location header; 403 if a
+     *         head teacher targets a class they do not own
      */
     @Operation(
             summary = "Create a new student",
@@ -70,9 +71,11 @@ public class StudentController {
     )
     @Log
     @PostMapping
-    public ResponseEntity<StudentVO> save(@Valid @RequestBody StudentSaveDTO studentSaveDTO) {
+    public ResponseEntity<StudentVO> save(@Valid @RequestBody StudentSaveDTO studentSaveDTO,
+                                          Authentication authentication) {
         log.info("Add new student:{}", studentSaveDTO);
-        StudentVO created = studentService.add(studentSaveDTO);
+        Integer scopeMasterId = resolveScopeMasterId(authentication);
+        StudentVO created = studentService.add(studentSaveDTO, scopeMasterId);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
