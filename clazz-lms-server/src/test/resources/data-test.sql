@@ -18,10 +18,65 @@ VALUES
 INSERT INTO emp
     (id, username, name, gender, phone, dept_id, create_time, update_time)
 VALUES
-    (1, 'alice', 'Alice', 1, '13800000001', 1, '2026-01-01 10:00:00', '2026-01-01 10:00:00');
+    (1,
+     'alice',
+     'Alice',
+     1,
+     '13800000001',
+     1,
+     '2026-01-01 10:00:00',
+     '2026-01-01 10:00:00');
+
+-- Clazz (class): create 2 classes
+INSERT INTO clazz
+    (id, name, begin_date, end_date, master_id, subject, create_time, update_time)
+VALUES
+    (1,
+     'Java班A',
+     '2026-01-01',
+     '2026-12-31',
+     10,
+     1,
+     '2026-01-01 10:00:00',
+     '2026-01-01 10:00:00'),
+    (2,
+     'Java班B',
+     '2026-01-01',
+     '2026-12-31',
+     20,
+     1,
+     '2026-01-01 10:00:00',
+     '2026-01-01 10:00:00');
+
+-- Student
+INSERT INTO student
+    (id, name, no, gender, phone, id_card, is_college, clazz_id, create_time, update_time)
+VALUES
+    (1,
+     '学生A1',
+     'S00000001',
+     1,
+     '13900000001',
+     '110101200001010001',
+     1,
+     1,
+     '2026-01-01 10:00:00',
+     '2026-01-01 10:00:00'),
+    (2,
+     '学生B1',
+     'S00000002',
+     2,
+     '13900000002',
+     '110101200001010002',
+     1,
+     2,
+     '2026-01-01 10:00:00',
+     '2026-01-01 10:00:00');
 
 -- Reset auto-increment counters so new INSERT statements
 -- get id values that don't conflict with seeded data above.
 -- Without this, H2 starts auto-increment from 1, colliding with seeded ids.
 ALTER TABLE dept ALTER COLUMN id RESTART WITH 100;
 ALTER TABLE emp ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE clazz ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE student ALTER COLUMN id RESTART WITH 100;

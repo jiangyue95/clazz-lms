@@ -1,6 +1,7 @@
 package com.yue.controller;
 
-import org.junit.jupiter.api.Disabled;
+import com.yue.pojo.enums.Job;
+import com.yue.security.WithMockEmp;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,13 +25,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * runs in a transaction that's rolled back at the end, keeping test
  * data isolated.
  */
-@Disabled("Auth migrated to Spring Security (commit 3). " +
-        "Integration test auth strategy needs rework: add spring-security-test " +
-        "+ @WithMockUser, or a test SecurityFilterChain. Tracked in TODO.")
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
+@WithMockEmp(role = Job.ADMIN)
 @DisplayName("DeptController Integration Tests")
 class DeptControllerIntegrationTest {
 

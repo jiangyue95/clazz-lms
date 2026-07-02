@@ -104,6 +104,13 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
+        <!-- Spring Security Test -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Spring Data Redis: stores refresh tokens with automatic TTL -->
         <!-- Used for the dual-token authentication flow (introduced in this PR). -->
         <dependency>
