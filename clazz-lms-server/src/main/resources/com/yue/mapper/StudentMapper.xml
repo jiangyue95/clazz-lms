@@ -101,14 +101,17 @@
         s.update_time
         FROM student AS s LEFT JOIN clazz AS c ON s.clazz_id = c.id
         <where>
-            <if test="name != null and name != ''">
-                s.name LIKE CONCAT ( '%', #{name}, '%' )
+            <if test="query.name != null and query.name != ''">
+                s.name LIKE CONCAT ( '%', #{query.name}, '%' )
             </if>
-            <if test="degree != null">
-                AND s.degree = #{degree}
+            <if test="query.degree != null">
+                AND s.degree = #{query.degree}
             </if>
-            <if test="clazzId != null">
-                AND s.clazz_id = #{clazzId}
+            <if test="query.clazzId != null">
+                AND s.clazz_id = #{query.clazzId}
+            </if>
+            <if test="scopeMasterId != null">
+                AND c.master_id = #{scopeMasterId}
             </if>
         </where>
         ORDER BY s.id

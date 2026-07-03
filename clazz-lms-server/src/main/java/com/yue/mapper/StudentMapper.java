@@ -24,12 +24,16 @@ import java.util.Map;
 public interface StudentMapper {
 
     /**
-     * Query student list based on query params.
+     * Query the student list, optionally narrowed by class ownership.
      *
-     * @param studentQueryParam query params
+     * @param query filter params (name / degree / clazzId) and pagination
+     * @param scopeMasterId when non-null, restricts results to students whose
+     *                      class master_id equals this value; when null, no
+     *                      ownership filter is applied
      * @return student list (possibly empty, never null)
      */
-    List<StudentVO> list(StudentQueryParam studentQueryParam);
+    List<StudentVO> list(@Param("query") StudentQueryParam query,
+                         @Param("scopeMasterId") Integer scopeMasterId);
 
     /**
      * Query student count for a given clazz.
