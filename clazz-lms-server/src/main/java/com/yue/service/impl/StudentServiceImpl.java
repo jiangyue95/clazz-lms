@@ -39,17 +39,18 @@ public class StudentServiceImpl implements StudentService {
     private final ClazzMapper clazzMapper;
 
     /**
-     * Page-query the student list with optional filters.
+     * {@inheritDoc}
      *
-     * @param studentQueryParam filter and pagination parameters
-     * @return a paged result of students (possibly empty, never {@code null})
+     * <p>Ownership is pushed into the SQL WHERE clause: a non-null scopeMasterId
+     * narrows the result set (and the PageHelper count) to the caller's own
+     * class, so an out-of-scope caller simply sees fewer rows - not a 404.
      */
     @Override
-    public PageResult<StudentVO> page(StudentQueryParam studentQueryParam) {
+    public PageResult<StudentVO> page(StudentQueryParam studentQueryParam, Integer scopeMasterId) {
         // PageHelper intercepts the very next MyBatis query on this thread
         // and applies LIMIT/OFFSET, then exposes total count via the Page wrapper.
         PageHelper.startPage(studentQueryParam.getPage(), studentQueryParam.getPageSize());
-        List<StudentVO> studentList = studentMapper.list(studentQueryParam);
+        List<StudentVO> studentList = studentMapper.list(studentQueryParam, scopeMasterId);
         Page<StudentVO> p = (Page<StudentVO>) studentList;
         return new PageResult<>(p.getTotal(), p.getResult());
     }

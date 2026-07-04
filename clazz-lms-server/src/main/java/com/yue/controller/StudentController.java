@@ -45,16 +45,21 @@ public class StudentController {
      * Page-query students with optional filters.
      *
      * @param studentQueryParam filter and pagination params
-     * @return 200 OK with the paged result (possibly empty)
+     * @param authentication the authentication caller (injected by Spring
+     *                       Security); used to resolve the ownership scope
+     * @return 200 OK with the paged result; for a head teacher the result is
+     *         narrowed to their own class (an empty page is valid, not a 404)
      */
     @Operation(
             summary = "Page students with optional filters",
             operationId = "pageStudents"
     )
     @GetMapping
-    public ResponseEntity<PageResult<StudentVO>> page(StudentQueryParam studentQueryParam) {
+    public ResponseEntity<PageResult<StudentVO>> page(StudentQueryParam studentQueryParam,
+                                                      Authentication authentication) {
         log.info("Student list query:{}", studentQueryParam);
-        PageResult<StudentVO> pageResult = studentService.page(studentQueryParam);
+        Integer scopeMasterId = resolveScopeMasterId(authentication);
+        PageResult<StudentVO> pageResult = studentService.page(studentQueryParam, scopeMasterId);
         return ResponseEntity.ok(pageResult);
     }
 

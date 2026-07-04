@@ -25,9 +25,12 @@ public interface StudentService {
      * Page-query student list.
      *
      * @param studentQueryParam query params (filters + pagination)
+     * @param scopeMasterId ownership scope; when non-null, results are
+     *                      narrowed to students in the caller's own class;
+     *                      null applies no restriction (admin path)
      * @return paged result (possibly empty, never null)
      */
-    PageResult<StudentVO> page(StudentQueryParam studentQueryParam);
+    PageResult<StudentVO> page(StudentQueryParam studentQueryParam, Integer scopeMasterId);
 
     /**
      * Create a new student.

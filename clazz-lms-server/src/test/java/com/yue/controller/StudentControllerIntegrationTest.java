@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.is;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -142,5 +144,43 @@ public class StudentControllerIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andExpect(jsonPath("$.clazzId").value(1));
+    }
+
+    @Test
+    @WithMockEmp(empId = 10, role = Job.HEAD_TEACHER)
+    @DisplayName("Head teacher listing students sees only their own class")
+    void headTeacher_listStudents_seesOnlyOwnClass() throws Exception {
+        mockMvc.perform(get("/students")
+                .param("page", "1")
+                .param("pageSize", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.rows.length()").value(2))
+                .andExpect(jsonPath("$.rows[*].clazzId", everyItem(is(1))));
+    }
+
+    @Test
+    @WithMockEmp(empId = 99, role = Job.ADMIN)
+    @DisplayName("Admin listing students sees all classes")
+    void admin_listStudents_seesAll() throws Exception {
+        mockMvc.perform(get("/students")
+                .param("page", "1")
+                .param("pageSize", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(3))
+                .andExpect(jsonPath("$.rows.length()").value(3));
+    }
+
+    @Test
+    @WithMockEmp
+    @DisplayName("Head teacher cannot use a clazzId filter to see another class")
+    void headTeacher_filterByOtherClass_returnsEmpty() throws Exception {
+        mockMvc.perform(get("/students")
+                .param("clazzId", "2")
+                .param("page", "1")
+                .param("pageSize", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(0))
+                .andExpect(jsonPath("$.rows.length()").value(0));
     }
 }
