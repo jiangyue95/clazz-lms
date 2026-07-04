@@ -12,6 +12,12 @@ spring:
       max-file-size: 10MB
       # the max size of the request (including file and form data)
       max-request-size: 10MB
+  #Flyway
+  flyway:
+    enable: true
+    baseline-on-migrate: true
+    baseline-version: 1
+    baseline-description: "existing schema baseline"
 
 # MyBatis configurations
 mybatis:
