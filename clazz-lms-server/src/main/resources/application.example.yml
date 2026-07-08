@@ -50,3 +50,9 @@ jwt:
   access-expiration-ms: 900000
   # refresh token expiration in ms (default 7 days)
   refresh-expiration-ms: 604800000
+
+# AWS S3
+aws:
+  s3:
+    region: your-region
+    bucket: your-bucket-name
