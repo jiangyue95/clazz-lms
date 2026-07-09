@@ -12,15 +12,13 @@ import org.springframework.web.multipart.MultipartFile;
 /**
  * File upload REST controller.
  *
- * <p><b>Status: temporarily out of service.</b> The Aliyun OSS credentials
- * backing this controller have expired, and migration to AWS S3 is planned
- * in a follow-up PR. This controller is documented here for completeness and
- * marked {@code deprecated} in the OpenAPI spec so consumers see a clear
- * warning in Swagger UI.
+ * <p>Uploads a file to AWS S3 via the {@link  FileStorage} abstraction and
+ * return the stored object key. The key is stable and safe to persist;
+ * a short-lived presigned URL can be generated from it on read.
  */
 @Tag(
         name = "File Upload",
-        description = "File upload endpoints (currently out of service - see notes)"
+        description = "File upload endpoints backed by AWS S3"
 )
 @Slf4j
 @RestController
@@ -33,20 +31,13 @@ public class UploadController {
     }
 
     @Operation(
-            summary = "Upload a file to cloud storage",
-            description = "**Temporarily out of service.** This endpoint was " +
-                    "backed by Aliyun OSS, whose credentials have expired. " +
-                    "Migration to AWS S3 is planned. Calls to this endpoint " +
-                    "will currently fail. Do not build new integrations " +
-                    "against this endpoint until migration is complete.",
-            operationId = "uploadFile",
-            deprecated = true
-
-
+            summary = "Upload a file to AWS S3",
+            description = "Uploads a file to AWS S3 and returns the stored object key.",
+            operationId = "uploadFile"
     )
     @PostMapping("/upload")
     public Result upload(MultipartFile file) throws Exception {
-        log.info("File upload：{}", file);
+        log.info("File upload:{}", file.getOriginalFilename());
 
         String key = fileStorage.upload(file.getBytes(), file.getOriginalFilename(), file.getContentType());
         log.info("File upload to AWS S3, key={}", key);
