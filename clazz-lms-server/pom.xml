@@ -81,10 +81,6 @@
             <groupId>org.glassfish.jaxb</groupId>
             <artifactId>jaxb-runtime</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.aliyun.oss</groupId>
-            <artifactId>aliyun-sdk-oss</artifactId>
-        </dependency>
 
         <!-- springdoc-openapi: scans @RestController and generates OpenAPI 3 spec -->
         <!-- Expose /v3/api-docs (JSON) and /swagger-ui.html (interactive UI) -->

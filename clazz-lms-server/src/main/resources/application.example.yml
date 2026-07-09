@@ -31,17 +31,6 @@ logging:
   level:
     org.springframework.jdbc.support.JdbcTransactionManager: debug
 
-# Aliyun OSS configs
-#
-# the endpoint of the aliyun oss
-# the bucket name of the aliyun oss
-# the region of the aliyun oss
-aliyun:
-  oss:
-    endpoint: https://oss-cn-huhehaote.aliyuncs.com
-    bucketName: java-learn-noon
-    region: cn-huhehaote
-
 # JWT Token configs
 jwt:
   # secret used to sign JWT tokens (must be at least 32 chars for HMAC-SHA256)

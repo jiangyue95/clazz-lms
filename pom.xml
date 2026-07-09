@@ -31,7 +31,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Unified version management -->
-        <aliyun.oss.version>3.18.1</aliyun.oss.version>
         <jjwt.version>0.12.6</jjwt.version>
         <lombok.version>1.18.42</lombok.version>
         <pagehelper.version>2.1.1</pagehelper.version>
@@ -43,18 +42,6 @@
     <!-- All submodules are referenced on demand and are not mandatory -->
     <dependencyManagement>
         <dependencies>
-            <!-- Aliyun OSS -->
-            <dependency>
-                <groupId>com.aliyun.oss</groupId>
-                <artifactId>aliyun-sdk-oss</artifactId>
-                <version>${aliyun.oss.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.ini4j</groupId>
-                        <artifactId>ini4j</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
 
             <!-- AWS SDK -->
             <dependency>
