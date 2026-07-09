@@ -17,15 +17,19 @@
     <description>LMS Utils Module</description>
 
     <dependencies>
+
+        <!-- AWS SDK -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+        </dependency>
+
+        <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
-        <!-- Aliyun OSS -->
-        <dependency>
-            <groupId>com.aliyun.oss</groupId>
-            <artifactId>aliyun-sdk-oss</artifactId>
-        </dependency>
+
         <!-- JWT dependencies -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>

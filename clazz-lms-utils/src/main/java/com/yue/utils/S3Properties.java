@@ -6,9 +6,8 @@ import org.springframework.stereotype.Component;
 
 @Data
 @Component
-@ConfigurationProperties(prefix = "aliyun.oss")
-public class AliyunOSSProperties {
-    private String endpoint;
-    private String bucketName;
+@ConfigurationProperties(prefix = "aws.s3")
+public class S3Properties {
     private String region;
+    private String bucket;
 }
