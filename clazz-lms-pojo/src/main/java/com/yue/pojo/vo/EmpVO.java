@@ -13,13 +13,10 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 public class EmpVO {
+
     private Integer id;
     private String username;
     private String name;
-
-//    sensitive field should not be added to VO
-//    private String password;
-
     private Integer gender;
     private String image;
     private Integer job;

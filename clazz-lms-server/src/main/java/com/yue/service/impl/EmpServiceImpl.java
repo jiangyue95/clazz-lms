@@ -11,15 +11,13 @@ import com.yue.pojo.entity.Emp;
 import com.yue.pojo.entity.EmpExpr;
 import com.yue.pojo.entity.EmpLog;
 import com.yue.pojo.entity.RefreshToken;
-import com.yue.pojo.vo.EmpInfoVO;
-import com.yue.pojo.vo.EmpLoginVO;
-import com.yue.pojo.vo.EmpVO;
-import com.yue.pojo.vo.RefreshVO;
+import com.yue.pojo.vo.*;
 import com.yue.repository.RefreshTokenRepository;
 import com.yue.security.JwtConfigProperties;
+import com.yue.security.JwtService;
 import com.yue.service.EmpLogService;
 import com.yue.service.EmpService;
-import com.yue.security.JwtService;
+import com.yue.utils.FileStorage;
 import com.yue.utils.HashUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -51,6 +49,7 @@ public class EmpServiceImpl implements EmpService {
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtConfigProperties jwtConfig;
+    private final FileStorage fileStorage;
 
     /**
      * Page query employee list
@@ -67,6 +66,9 @@ public class EmpServiceImpl implements EmpService {
 
         // 3. wrap the query result in a PageResult object
         Page<EmpVO> p = (Page<EmpVO>) empList;
+
+        p.getResult().forEach(this::applyPresignedImageUrl);
+
         return new PageResult<>(p.getTotal(), p.getResult());
     }
 
@@ -166,6 +168,7 @@ public class EmpServiceImpl implements EmpService {
                 .createTime(emp.getCreateTime())
                 .updateTime(emp.getUpdateTime())
                 .build();
+        applyPresignedImageUrl(empInfoVO);
         return empInfoVO;
     }
 
@@ -226,7 +229,9 @@ public class EmpServiceImpl implements EmpService {
      */
     @Override
     public List<EmpVO> getAllEmp() {
-        return empMapper.queryAll();
+        List<EmpVO> list = empMapper.queryAll();
+        list.forEach(this::applyPresignedImageUrl);
+        return list;
     }
 
     /**
@@ -472,6 +477,18 @@ public class EmpServiceImpl implements EmpService {
             log.error("Password changed for empId={} but refresh token revoke FAILED: {}." +
                     "Old refresh tokens remain valid until natural expiry - manual cleanup may be required.",
                     empId, e.getMessage(), e);
+        }
+    }
+
+    private void applyPresignedImageUrl(EmpVO empVO) {
+        if (empVO != null && empVO.getImage() != null) {
+            empVO.setImage(fileStorage.generatePresignedUrl(empVO.getImage()));
+        }
+    }
+
+    private void applyPresignedImageUrl(EmpInfoVO empInfoVO) {
+        if (empInfoVO != null && empInfoVO.getImage() != null) {
+            empInfoVO.setImage(fileStorage.generatePresignedUrl(empInfoVO.getImage()));
         }
     }
 }
