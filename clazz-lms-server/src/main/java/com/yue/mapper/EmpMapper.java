@@ -109,7 +109,6 @@ public interface EmpMapper {
      * @param username username
      * @return an employee entity
      */
-    @Mapper
     Emp getByUsername(String username);
 
     /**
