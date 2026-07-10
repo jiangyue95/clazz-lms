@@ -62,6 +62,7 @@ public interface StudentMapper {
      */
     @Select("SELECT " +
             "id, " +
+            "image, " +
             "name, " +
             "no, " +
             "phone, " +

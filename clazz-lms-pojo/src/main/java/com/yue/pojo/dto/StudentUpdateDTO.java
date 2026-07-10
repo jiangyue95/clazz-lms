@@ -21,6 +21,9 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class StudentUpdateDTO {
 
+    @Size(max = 255, message = "The length of photo address cannot exceed {max} characters")
+    private String image;
+
     @Size(min = 2, max = 10, message = "Student name must be {min} to {max} characters")
     private String name;
 

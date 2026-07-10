@@ -16,7 +16,10 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 public class StudentVO {
+
     private Integer id;
+
+    private String image;
 
     // student name
     private String name;
