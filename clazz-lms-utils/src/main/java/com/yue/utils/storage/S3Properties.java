@@ -1,4 +1,4 @@
-package com.yue.utils;
+package com.yue.utils.storage;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

@@ -1,4 +1,4 @@
-package com.yue.utils;
+package com.yue.utils.storage;
 
 public interface FileStorage {
 

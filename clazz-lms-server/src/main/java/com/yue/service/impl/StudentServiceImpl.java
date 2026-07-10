@@ -14,7 +14,7 @@ import com.yue.pojo.entity.Student;
 import com.yue.pojo.vo.ClazzVO;
 import com.yue.pojo.vo.StudentVO;
 import com.yue.service.StudentService;
-import com.yue.utils.FileStorage;
+import com.yue.utils.storage.FileStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
