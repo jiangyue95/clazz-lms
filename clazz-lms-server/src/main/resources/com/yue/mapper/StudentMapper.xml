@@ -13,6 +13,7 @@
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO
         student(
+            image,
             name,
             no,
             gender,
@@ -27,6 +28,7 @@
             update_time
         )
         VALUES(
+            #{image},
             #{name},
             #{no},
             #{gender},
@@ -52,6 +54,7 @@
     <update id="update">
         Update student
         <set>
+            <if test="student.image != null and student.image != ''">image = #{student.image},</if>
             <if test="student.name != null and student.name != ''">name = #{student.name},</if>
             <if test="student.no != null and student.no != ''">no = #{student.no},</if>
             <if test="student.gender != null">gender = #{student.gender},</if>
@@ -84,6 +87,7 @@
     <select id="list" resultType="com.yue.pojo.vo.StudentVO">
         SELECT
         s.id,
+        s.image,
         s.name,
         s.no,
         s.gender,
@@ -146,6 +150,7 @@
     <select id="getStudentByIdScoped" resultType="com.yue.pojo.vo.StudentVO">
         SELECT
         s.id,
+        s.image,
         s.name,
         s.no,
         s.gender,

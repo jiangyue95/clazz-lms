@@ -15,6 +15,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 public class EmpInfoVO {
+
     private Integer id;
     private String username;
     private String name;

@@ -20,6 +20,9 @@ public class Student {
     // primary key
     private Integer id;
 
+    // avatar S3 object key
+    private String image;
+
     // student name
     private String name;
 

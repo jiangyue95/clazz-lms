@@ -14,6 +14,7 @@ import com.yue.pojo.entity.Student;
 import com.yue.pojo.vo.ClazzVO;
 import com.yue.pojo.vo.StudentVO;
 import com.yue.service.StudentService;
+import com.yue.utils.FileStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,7 @@ public class StudentServiceImpl implements StudentService {
 
     private final StudentMapper studentMapper;
     private final ClazzMapper clazzMapper;
+    private final FileStorage fileStorage;
 
     /**
      * {@inheritDoc}
@@ -52,6 +54,7 @@ public class StudentServiceImpl implements StudentService {
         PageHelper.startPage(studentQueryParam.getPage(), studentQueryParam.getPageSize());
         List<StudentVO> studentList = studentMapper.list(studentQueryParam, scopeMasterId);
         Page<StudentVO> p = (Page<StudentVO>) studentList;
+        p.getResult().forEach(this::applyPresignedImageUrl);
         return new PageResult<>(p.getTotal(), p.getResult());
     }
 
@@ -75,6 +78,7 @@ public class StudentServiceImpl implements StudentService {
         // Capture a single timestamp so createTime and updateTime are identical.
         LocalDateTime now = LocalDateTime.now();
         Student student = Student.builder()
+                .image(studentSaveDTO.getImage())
                 .name(studentSaveDTO.getName())
                 .no(studentSaveDTO.getNo())
                 .gender(studentSaveDTO.getGender())
@@ -93,7 +97,9 @@ public class StudentServiceImpl implements StudentService {
         // We re-fetch via getStudentById so the returned VO includes joined
         // fields (e.g., clazz_name from the LEFT JOIN in list query - not
         // currently fetched by this getter, but safe path for future enrichment).
-        return studentMapper.getStudentById(student.getId());
+        StudentVO vo = studentMapper.getStudentById(student.getId());
+        applyPresignedImageUrl(vo);
+        return vo;
     }
 
     /**
@@ -112,6 +118,7 @@ public class StudentServiceImpl implements StudentService {
         if (studentVO == null) {
             throw new ResourceNotFoundException("Student with id " + id + " not found");
         }
+        applyPresignedImageUrl(studentVO);
         return studentVO;
     }
 
@@ -127,6 +134,7 @@ public class StudentServiceImpl implements StudentService {
     public StudentVO modifyStudentInfo(Integer id, StudentUpdateDTO studentUpdateDTO, Integer scopeMasterId) {
         Student student = Student.builder()
                 .id(id)
+                .image(studentUpdateDTO.getImage())
                 .name(studentUpdateDTO.getName())
                 .no(studentUpdateDTO.getNo())
                 .gender(studentUpdateDTO.getGender())
@@ -143,7 +151,9 @@ public class StudentServiceImpl implements StudentService {
         if (affected == 0) {
             throw new ResourceNotFoundException("Student with id " + id + " not found");
         }
-        return studentMapper.getStudentById(id);
+        StudentVO vo = studentMapper.getStudentById(student.getId());
+        applyPresignedImageUrl(vo);
+        return vo;
     }
 
     /**
@@ -177,6 +187,18 @@ public class StudentServiceImpl implements StudentService {
         if (affected == 0) {
             throw new ResourceNotFoundException("Student with id " + studentId + " not found");
         }
-        return studentMapper.getStudentById(studentId);
+        StudentVO vo = studentMapper.getStudentById(studentId);
+        applyPresignedImageUrl(vo);
+        return vo;
+    }
+
+    /**
+     * Replaces the stored S3 object key on the VO with a freshly generated,
+     * short-lived presigned URL. No-op when the student has no avatar (null key)
+     */
+    private void applyPresignedImageUrl(StudentVO studentVO) {
+        if (studentVO != null && studentVO.getImage() != null) {
+            studentVO.setImage(fileStorage.generatePresignedUrl(studentVO.getImage()));
+        }
     }
 }
