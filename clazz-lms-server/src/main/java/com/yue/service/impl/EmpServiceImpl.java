@@ -17,7 +17,7 @@ import com.yue.security.JwtConfigProperties;
 import com.yue.security.JwtService;
 import com.yue.service.EmpLogService;
 import com.yue.service.EmpService;
-import com.yue.utils.FileStorage;
+import com.yue.utils.storage.FileStorage;
 import com.yue.utils.HashUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;

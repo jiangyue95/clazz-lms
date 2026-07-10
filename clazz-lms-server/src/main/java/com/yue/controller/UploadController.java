@@ -1,7 +1,7 @@
 package com.yue.controller;
 
 import com.yue.pojo.Result;
-import com.yue.utils.FileStorage;
+import com.yue.utils.storage.FileStorage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
