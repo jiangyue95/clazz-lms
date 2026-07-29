@@ -2,11 +2,11 @@
 
 A Spring Boot learning management system — started as a tutorial project, currently being refactored toward production quality in a series of atomic PRs. My first end-to-end backend project, and an ongoing sandbox for engineering practices I'm learning along the way.
 
-**Status:** Active. 30 merged PRs as of July 2026.
+**Status:** Active. 37 merged PRs as of July 2026.
 
 **Long-term goal:** Evolve this from a learning sandbox into a production-deployable school administration system.
 
-**Stack:** Java 17, Spring Boot 3, Spring Security, MyBatis, MySQL 8, Redis, Maven, multi-module, JWT, BCrypt, springdoc-openapi, JUnit + H2 (test-scoped).
+**Stack:** Java 17, Spring Boot 3, Spring Security, MyBatis, MySQL 8, Flyway, Redis, AWS S3, Maven multi-module, JWT, BCrypt, springdoc-openapi, JUnit + H2 (test-scoped).
 
 ## Table of Contents
 
@@ -42,7 +42,7 @@ The codebase is deliberately incrementally improved — each PR is a focused ref
 ```
 clazz-lms/
 ├── clazz-lms-pojo/      Entities, DTOs (request), VOs (response)
-├── clazz-lms-utils/     Shared utilities (Aliyun OSS operator, avatar generator, hashing)
+├── clazz-lms-utils/     Shared utilities (S3 storage operator, avatar generator, hashing)
 └── clazz-lms-server/    Web layer (controllers, services, mappers, config)
 ```
 
@@ -61,7 +61,7 @@ com.yue/
 ├── repository/                  RefreshTokenRepository (Redis-backed)
 ├── security/                    JwtService, SecurityConfig, JwtConfigProperties, JwtAuthFilter, JwtAuthenticationEntryPoint, JwtAccessDeniedHandler
 ├── exception/                   Custom exceptions + GlobalExceptionHandler
-├── config/                      WebConfig, OpenApiConfig, CorsConfig
+├── config/                      OpenApiConfig, CorsConfig
 ├── aop/                         LogAspect (operation auditing)
 └── anno/                        Custom annotations (@Log)
 ```
@@ -122,9 +122,9 @@ Create the database:
 CREATE DATABASE tlias CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-> Schema is managed by Flyway. On the first startup, Flyway applies the
-> versioned migrations (`V1` baseline + `V2`) to an empty database - no
-> manual table creation needed.
+> Schema is managed by Flyway. On the first startup, Flyway applies all
+> versioned migrations under `db/migration` (starting from the `V1`
+> baseline) to an empty database - no manual table creation needed.
 
 ### 3. Configure application.yml
 
@@ -170,7 +170,7 @@ A successful login returns an access token and a refresh token; subsequent reque
 
 ## Engineering Highlights
 
-The project has been refactored across 30 atomic PRs since May 2026, each documented with a clear motivation, design decisions, and verification steps. Selected highlights:
+The project has been refactored across 37 atomic PRs since May 2026, each documented with a clear motivation, design decisions, and verification steps. Selected highlights:
 
 ### Introduce Flyway migrations with baseline and i18n name widening ([PR #30](https://github.com/jiangyue95/clazz-lms/pull/30))
 
@@ -212,8 +212,7 @@ Migrated JWT signing secret and expiration from compile-time constants to `appli
 
 ### REST conventions across all CRUD controllers (PRs [#5](https://github.com/jiangyue95/clazz-lms/pull/5), [#6](https://github.com/jiangyue95/clazz-lms/pull/6), [#7](https://github.com/jiangyue95/clazz-lms/pull/7), [#9](https://github.com/jiangyue95/clazz-lms/pull/9))
 
-Aligned `LoginController`, `ClazzController`, `EmpController`, and read-only controllers (`LogController`, `ReportController`) with
-REST conventions: proper HTTP status codes (201 Created, 204 No Content, 404 Not Found, 409 Conflict), `Location` headers on POST responses, and `ResponseEntity<T>` return types throughout.
+Aligned `LoginController`, `ClazzController`, `EmpController`, and read-only controllers (`LogController`, `ReportController`) with REST conventions: proper HTTP status codes (201 Created, 204 No Content, 404 Not Found, 409 Conflict), `Location` headers on POST responses, and `ResponseEntity<T>` return types throughout.
 
 ### Audit-discovered fix: NoResourceFoundException handler ([PR #8](https://github.com/jiangyue95/clazz-lms/pull/8))
 
@@ -225,9 +224,9 @@ For the full list, see the [merged PRs on GitHub](https://github.com/jiangyue95/
 
 Planned improvements, roughly in order of priority:
 
+- **Continuous integration**: there is no CI pipeline yet. The test suite still depends on a local `application.yml` that is not in version control, so making the tests self-contained is a prerequisite before adding a GitHub Actions workflow that runs them on every push and pull request.
 - **`DelegatingPasswordEncoder`**: `SecurityConfig` already exposes the encoder via the `PasswordEncoder` interface, so migrating BCrypt -> Argon2 (with `{bcrypt}` / `{argon2}` format prefixes) would be a near single-line change with no dual-write series needed.
-- **File upload via AWS S3**: UploadController is in place; the previous Aliyun OSS configuration has expired and will be replaced with S3.
-- **Integration tests beyond Dept**: `DeptControllerIntegrationTest` covers the Dept endpoints; coverage for Emp, Clazz, Student, and the auth flow is pending.
+- **Broader integration test coverage**: `DeptControllerIntegrationTest` and `StudentControllerIntegrationTest` cover the Dept and Student endpoints; coverage for Emp, Clazz, and the auth flow is pending.
 
 ## Project Origin
 
