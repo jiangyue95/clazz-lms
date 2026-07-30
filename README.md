@@ -121,7 +121,7 @@ cd clazz-lms
 Create the database:
 
 ```sql
-CREATE DATABASE tlias CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE clazz_lms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
 > Schema is managed by Flyway. On the first startup, Flyway applies all
