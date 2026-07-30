@@ -33,3 +33,7 @@ logging:
     org.springframework.jdbc.core: TRACE
     org.mybatis: TRACE
     com.zaxxer.hikari: INFO
+jwt:
+  secret: test-secret-key-for-ci-at-least-32-characters-long
+  access-expiration-ms: 900000
+  refresh-expiration-ms: 604800000
