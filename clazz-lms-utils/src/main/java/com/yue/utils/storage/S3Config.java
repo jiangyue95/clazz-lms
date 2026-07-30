@@ -1,5 +1,6 @@
 package com.yue.utils.storage;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.regions.Region;
@@ -7,6 +8,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 @Configuration
+@ConditionalOnProperty(name = "app.storage.type", havingValue = "s3", matchIfMissing = true)
 public class S3Config {
 
     private final S3Properties s3Properties;
@@ -27,5 +29,12 @@ public class S3Config {
         return S3Presigner.builder()
                 .region(Region.of(s3Properties.getRegion()))
                 .build();
+    }
+
+    @Bean
+    public FileStorage fileStorage(S3Client s3Client,
+                                   S3Presigner s3Presigner,
+                                   S3Properties s3Properties) {
+        return new S3StorageOperator(s3Client, s3Presigner, s3Properties);
     }
 }
