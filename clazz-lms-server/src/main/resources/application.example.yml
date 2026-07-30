@@ -1,25 +1,33 @@
 spring:
   application:
     name: your-application-name
+  # MySQL
   datasource:
-    url: your url
+    url: jdbc:mysql://localhost:3306/tlias
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: your username
     password: your password
+  # Redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      # password: only if your Redis requires auth
+      timeout: 3000ms
   servlet:
     multipart:
       # the max size of a single file
       max-file-size: 10MB
       # the max size of the request (including file and form data)
       max-request-size: 10MB
-  #Flyway
+  # Flyway
   flyway:
-    enable: true
+    enabled: true
     baseline-on-migrate: true
     baseline-version: 1
     baseline-description: "existing schema baseline"
 
-# MyBatis configurations
+# MyBatis
 mybatis:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
@@ -31,7 +39,7 @@ logging:
   level:
     org.springframework.jdbc.support.JdbcTransactionManager: debug
 
-# JWT Token configs
+# JWT
 jwt:
   # secret used to sign JWT tokens (must be at least 32 chars for HMAC-SHA256)
   secret: your-jwt-secret-here-at-least-32-characters-long
