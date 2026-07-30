@@ -25,6 +25,7 @@ departments, classes, employees (teachers, head teachers, advisors),
 and students. The current scope includes:
 
 - CRUD APIs for departments, classes, employees, and students
+- File storage on AWS S3: private bucket, object keys in the database, presigned URLs at read time
 - Self-service authentication: registration, login, token refresh, and password change
 - Dual-token JWT auth: a short-lived access token plus a refresh token stored in Redis (SHA-256 hashed), with per-user revocation
 - Authentication by Spring Security and authorization by RBAC
@@ -106,6 +107,7 @@ in Redis, and exchanged for a new access token at `/refresh`.
 - MySQL 8.x (running on `localhost:3306` for default config)
 - IntelliJ IDEA recommended (the project includes `.idea/` config)
 - Redis (for refresh-token storage; default `localhost:6379`)
+- AWS account with a private S3 bucket (for file storage; credentials are read from your local AWS profile, not from `application.yml`)
 
 ### 1. Clone the repository
 
@@ -137,13 +139,16 @@ cp clazz-lms-server/src/main/resources/application.example.yml \
 
 Then edit `application.yml`:
 
-- `spring.datasource.username` / `password` — your MySQL credentials
+- `spring.datasource.username` / `password` - your MySQL credentials
 - `spring.data.redis.host` / `port` - your Redis connection
-- `jwt.secret` — any string at least 32 characters long (for HMAC-SHA256
-  signing)
+- `jwt.secret` - any string at least 32 characters long (for HMAC-SHA256 signing)
+- `aws.s3.region` / `bucket` - the region and name of your S3 bucket
 
-The real `application.yml` is gitignored and never committed — only
-the `.example.yml` template is in version control.
+AWS credentials are deliberately not part of `application.yml`. The SDK resolves them itself - from a local profile (`aws configure`) or the `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` environment variables in development, and from an IAM role when running on EC2. The identity needs `s3:PutObject` and `s3:GetObject` on the bucket.
+
+Note that `aws.s3.region` is required for the application to start, even if you never upload a file: the S3 client bean is created at startup.
+
+The real `application.yml` is gitignored and never committed - only the `.example.yml` template is in version control.
 
 ### 4. Run the application
 
@@ -171,6 +176,24 @@ A successful login returns an access token and a refresh token; subsequent reque
 ## Engineering Highlights
 
 The project has been refactored across 37 atomic PRs since May 2026, each documented with a clear motivation, design decisions, and verification steps. Selected highlights:
+
+### File storage migrated from Aliyun OSS to AWS S3 behind a storage interface ([PR #33](https://github.com/jiangyue95/clazz-lms/pull/33))
+
+The Aliyun OSS credentials had expired, which left the `/upload` endpoint broken. This PR moves file storage to AWS S3 and puts it behind a `FileStorage` interface, so the controller depends on the interface rather than a concrete provider and the backend can be replaced without changing any caller.
+
+Two decisions are worth noting. First, no credentials live in the project. The AWS SDK's default credentials provider chain reads a local AWS profile during development and an IAM role when running on EC2, so `application.yml` holds only the region and the bucket name. Second, the bucket is private. The old design stored a public URL in the database; the new one stores the object key and signs a short-lived URL at read time, so a leaked database row no longer grants permanent access to a file.
+
+### Avatar read path for employees and students ([PR #34](https://github.com/jiangyue95/clazz-lms/pull/34))
+
+Added avatar support for students and a presigned read path shared by both emp and student avatars. `V3__add_student_image.sql` adds a nullable `image` column to `student` — nullable because existing students have no avatar and the field stays optional going forward.
+
+The column stores the S3 object key, not a URL. The presigned URL is generated when the record is read, which keeps the stored value stable: the key never changes, while the signed URL is short-lived by design. Storing the URL instead would put a value in the database that expires on its own.
+
+### Explicit column lists in EmpMapper ([PR #35](https://github.com/jiangyue95/clazz-lms/pull/35))
+
+Replaced `SELECT *` with explicit column lists in the `empList` and `getById` queries. The two now differ deliberately: `getById` returns the full `Emp` entity including the password hash, because the login flow needs it, while `empList` omits `password` and `phone`.
+
+`SELECT *` was not exposing the hash to clients — `EmpVO` has no `password` field, so MyBatis discarded it. The problem is that nothing enforced that. Adding a field to the VO, or switching the result type to a `Map`, would have started returning the hash with no visible change to the query itself. Listing the columns puts the intent in the query instead of relying on the VO to filter it.
 
 ### Introduce Flyway migrations with baseline and i18n name widening ([PR #30](https://github.com/jiangyue95/clazz-lms/pull/30))
 
