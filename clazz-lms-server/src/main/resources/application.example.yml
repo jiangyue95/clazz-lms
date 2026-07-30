@@ -3,7 +3,7 @@ spring:
     name: your-application-name
   # MySQL
   datasource:
-    url: jdbc:mysql://localhost:3306/tlias
+    url: jdbc:mysql://localhost:3306/clazz_lms
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: your username
     password: your password
