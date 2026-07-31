@@ -1,7 +1,6 @@
 package com.yue.utils.storage;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -18,18 +17,16 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Slf4j
-@Component
-public class S3StorageOperator implements FileStorage{
+public class S3StorageOperator implements FileStorage {
 
-    // 为什么用 final
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
     private final S3Properties s3Properties;
 
-    public  S3StorageOperator(S3Client s3client,
-                              S3Presigner s3Presigner,
-                              S3Properties s3Properties) {
-        this.s3Client = s3client;
+    public S3StorageOperator(S3Client s3Client,
+                             S3Presigner s3Presigner,
+                             S3Properties s3Properties) {
+        this.s3Client = s3Client;
         this.s3Presigner = s3Presigner;
         this.s3Properties = s3Properties;
     }

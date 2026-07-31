@@ -9,6 +9,9 @@ spring:
     username: sa
     password:
 
+  flyway:
+    enabled: false
+
   sql:
     init:
       mode: always
@@ -25,8 +28,15 @@ logging:
     com.yue: DEBUG
     org.springframework.test: INFO
     org.springframework.web: INFO
-    # 加这些 - 暴露 SQL 错误细节
-    org.springframework.jdbc: DEBUG
-    org.springframework.jdbc.core: TRACE
-    org.mybatis: TRACE
+#    org.springframework.jdbc: DEBUG
+#    org.springframework.jdbc.core: TRACE
+#    org.mybatis: TRACE
     com.zaxxer.hikari: INFO
+jwt:
+  secret: test-secret-key-for-ci-at-least-32-characters-long
+  access-expiration-ms: 900000
+  refresh-expiration-ms: 604800000
+# Storage
+app:
+  storage:
+    type: stub
