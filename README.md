@@ -2,11 +2,11 @@
 
 A Spring Boot learning management system — started as a tutorial project, currently being refactored toward production quality in a series of atomic PRs. My first end-to-end backend project, and an ongoing sandbox for engineering practices I'm learning along the way.
 
-**Status:** Active. 37 merged PRs as of July 2026.
+**Status:** Active. 42 merged PRs as of July 2026.
 
 **Long-term goal:** Evolve this from a learning sandbox into a production-deployable school administration system.
 
-**Stack:** Java 17, Spring Boot 3, Spring Security, MyBatis, MySQL 8, Flyway, Redis, AWS S3, Maven multi-module, JWT, BCrypt, springdoc-openapi, JUnit + H2 (test-scoped).
+**Stack:** Java 17, Spring Boot 3, Spring Security, MyBatis, MySQL 8, Flyway, Redis, AWS S3, Maven multi-module, JWT, BCrypt, springdoc-openapi, JUnit + H2 (test-scoped), GitHub Actions.
 
 ## Table of Contents
 
@@ -175,7 +175,15 @@ A successful login returns an access token and a refresh token; subsequent reque
 
 ## Engineering Highlights
 
-The project has been refactored across 37 atomic PRs since May 2026, each documented with a clear motivation, design decisions, and verification steps. Selected highlights:
+The project has been refactored across 42 atomic PRs since May 2026, each documented with a clear motivation, design decisions, and verification steps. Selected highlights:
+
+### Continuous integration, and the five bugs it found on the first run ([PR #42](https://github.com/jiangyue95/clazz-lms/pull/42))
+
+Added a GitHub Actions workflow running `mvn --batch-mode clean test` on every push and pull request, with branch protection requiring it to pass before merging to `main`. The workflow itself is short; making the test suite survive a clean checkout was the actual work.
+
+Nothing had ever run the tests outside my machine, and the first run showed what that costs. Five separate problems failed the build, each hidden behind the previous one: Flyway ran against H2 and collided on constraint names, which MySQL scopes per table and H2 per schema; the `jwt` properties only existed in the gitignored `application.yml`, so `@Validated` binding failed everywhere else; `S3Config` built an `S3Client` unconditionally, so a missing region failed startup even in tests that never touch storage; `schema-test.sql` had drifted from the migrations; and `operate_log` was created but never dropped.
+
+The last one is the one worth keeping. It only appeared after an earlier fix: pinning the application context test to the test profile gave it a configuration the two integration tests did not share, so Spring could not reuse the cached context and built a second one. That ran the init script a second time against the same in-memory database, which H2 keeps alive between connections, and the unconditional `CREATE TABLE` collided. Fixing one bug is what made the next one visible - which is the argument for CI in one sentence.
 
 ### File storage migrated from Aliyun OSS to AWS S3 behind a storage interface ([PR #33](https://github.com/jiangyue95/clazz-lms/pull/33))
 
@@ -247,7 +255,7 @@ For the full list, see the [merged PRs on GitHub](https://github.com/jiangyue95/
 
 Planned improvements, roughly in order of priority:
 
-- **Continuous integration**: there is no CI pipeline yet. The test suite still depends on a local `application.yml` that is not in version control, so making the tests self-contained is a prerequisite before adding a GitHub Actions workflow that runs them on every push and pull request.
+- **Testcontainers for integration tests**: the test suite builds its schema from `schema-test.sql` with  Flyway disabled, so the migrations are never exercised and the two schemas drift - CI caught one such   drift on its first run. Running the real migrations against a disposable MySQL container would remove   the second schema entirely.
 - **`DelegatingPasswordEncoder`**: `SecurityConfig` already exposes the encoder via the `PasswordEncoder` interface, so migrating BCrypt -> Argon2 (with `{bcrypt}` / `{argon2}` format prefixes) would be a near single-line change with no dual-write series needed.
 - **Broader integration test coverage**: `DeptControllerIntegrationTest` and `StudentControllerIntegrationTest` cover the Dept and Student endpoints; coverage for Emp, Clazz, and the auth flow is pending.
 
